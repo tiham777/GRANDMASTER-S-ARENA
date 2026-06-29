@@ -127,29 +127,6 @@
   }
 }
 
-/* Light theme for the online game view.
-   The GameView toggles a `.light-mode` class on its root container; this
-   block overrides the dark stone-950 palette with warm cream / paper tones
-   that match the offline chess-game.html light mode look. */
-.light-mode {
-  background: radial-gradient(circle at 50% 0%, #faf7f2 0%, #efe9df 70%) !important;
-  color: #1c1917 !important;
-}
-.light-mode header,
-.light-mode .light-aware {
-  background: rgba(255, 252, 247, 0.92) !important;
-  border-color: #d6cfc1 !important;
-  color: #1c1917 !important;
-}
-.light-mode .light-aware-card {
-  background: #ffffff !important;
-  border-color: #e2dccd !important;
-  color: #1c1917 !important;
-}
-.light-mode .light-aware-muted {
-  color: #6b6256 !important;
-}
-
 /* Hide scrollbars (matches original) */
 * {
   scrollbar-width: none;
@@ -172,31 +149,6 @@
   --capture-ring: rgba(244, 63, 94, 0.85); /* rose-500 — capture indicator */
   --check: rgba(244, 63, 94, 0.65);        /* rose-500 — king in check */
   --selected: #fed7aa;                     /* selected source square */
-}
-
-/* Board color themes — exactly the same 5 themes as the offline chess-game.html.
-   Switching is done by adding a `data-board-theme="..."` attribute on the
-   `.chess-board-wrap` element. The GameView reads the selected theme from
-   React state and writes this attribute via a ref effect. */
-.chess-board-wrap[data-board-theme="classic"] {
-  --light-sq: #f0d9b5;
-  --dark-sq: #b58863;
-}
-.chess-board-wrap[data-board-theme="tournament"] {
-  --light-sq: #ececd7;
-  --dark-sq: #739552;
-}
-.chess-board-wrap[data-board-theme="midnight"] {
-  --light-sq: #d6d3d1;   /* stone-300 */
-  --dark-sq: #57534e;    /* stone-600 */
-}
-.chess-board-wrap[data-board-theme="oceanic"] {
-  --light-sq: #e9edf0;
-  --dark-sq: #4b7399;
-}
-.chess-board-wrap[data-board-theme="sunset"] {
-  --light-sq: #fed7aa;
-  --dark-sq: #9a3412;
 }
 
 @keyframes thinking-dot {

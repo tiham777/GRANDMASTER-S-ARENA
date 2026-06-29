@@ -19,14 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useChessStore } from "@/lib/store";
 import {
@@ -57,9 +49,6 @@ export default function LobbyView() {
   const [searching, setSearching] = useState(false);
   const [busyUid, setBusyUid] = useState<string | null>(null);
   const [expiredShown, setExpiredShown] = useState(false);
-  // Challenge color picker dialog state
-  const [colorPickFor, setColorPickFor] = useState<UserProfile | null>(null);
-  const [pendingColor, setPendingColor] = useState<"white" | "black" | "random">("white");
   const { toast } = useToast();
   const searchDebounce = useRef<ReturnType<typeof setTimeout> | null>(null);
   const setActiveGame = useChessStore((s) => s.setActiveGame);
@@ -80,20 +69,9 @@ export default function LobbyView() {
       (c) => c.status === "accepted" && c.gameId
     );
     if (accepted && accepted.gameId) {
-      // Resolve my color from the challenger's chosen color (now stored on
-      // the challenge doc). Backward-compatible: if no color is recorded,
-      // the challenger plays white.
-      const choice = accepted.challengerColor ?? "white";
-      let myColor: "white" | "black";
-      if (choice === "white") myColor = "white";
-      else if (choice === "black") myColor = "black";
-      else {
-        // For "random", the actual side was decided by acceptChallenge and
-        // committed to the game doc. We optimistically default to white here;
-        // GameView will read the true color from the live game doc as soon as
-        // it loads, and our color picker UI shows the right info to the user.
-        myColor = "white";
-      }
+      // Challenger plays white (challengerUid == whiteUid, see acceptChallenge in chessApi)
+      const myColor: "white" | "black" =
+        accepted.challengerUid === profile.uid ? "white" : "black";
       setActiveGame(accepted.gameId, null, myColor);
       setView("game");
       toast({
@@ -132,25 +110,14 @@ export default function LobbyView() {
     };
   }, [search, profile]);
 
-  // Step 1: clicking "Challenge" opens the color-picker dialog instead of
-  // sending the challenge immediately. This lets the challenger pick which
-  // color they want to play before the challenge is created.
-  function openColorPicker(target: UserProfile) {
-    setColorPickFor(target);
-    setPendingColor("white");
-  }
-
-  // Step 2: after the user picks a color, actually send the challenge.
-  async function confirmChallenge() {
-    if (!profile || !colorPickFor) return;
-    const target = colorPickFor;
+  async function handleChallenge(target: UserProfile) {
+    if (!profile) return;
     setBusyUid(target.uid);
-    setColorPickFor(null);
     try {
-      await sendChallenge(profile, target.uid, target.username, pendingColor);
+      await sendChallenge(profile, target.uid, target.username);
       toast({
         title: "Challenge sent!",
-        description: `Waiting for ${target.username} to accept (5 min). You'll play ${pendingColor === "random" ? "a random side" : pendingColor}.`,
+        description: `Waiting for ${target.username} to accept (5 min).`,
       });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Failed.";
@@ -369,7 +336,7 @@ export default function LobbyView() {
                           size="sm"
                           variant={alreadyChallenged ? "outline" : "default"}
                           disabled={isBusy || alreadyChallenged}
-                          onClick={() => openColorPicker(p)}
+                          onClick={() => handleChallenge(p)}
                           className={
                             alreadyChallenged
                               ? "border-stone-700 text-stone-500"
@@ -434,98 +401,7 @@ export default function LobbyView() {
 
       {/* If our most recent outgoing got declined, show a tiny notice briefly */}
       {justDeclined && !pendingOutgoing && <ChallengeExpiredNotice />}
-
-      {/* Color picker dialog — challenger chooses which side to play */}
-      <Dialog open={!!colorPickFor} onOpenChange={(o) => !o && setColorPickFor(null)}>
-        <DialogContent className="bg-stone-900 border-stone-700 text-stone-100">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Swords className="size-5 text-amber-400" />
-              Challenge {colorPickFor?.username}
-            </DialogTitle>
-            <DialogDescription className="text-stone-400">
-              Choose which color you want to play. {colorPickFor?.username} will see your choice before they accept.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 gap-3 py-2">
-            <ColorOption
-              label="White"
-              description="Move first"
-              selected={pendingColor === "white"}
-              onClick={() => setPendingColor("white")}
-              swatch={
-                <span className="size-8 rounded-full bg-stone-100 border-2 border-stone-300" />
-              }
-            />
-            <ColorOption
-              label="Black"
-              description="Respond to 1.e4"
-              selected={pendingColor === "black"}
-              onClick={() => setPendingColor("black")}
-              swatch={
-                <span className="size-8 rounded-full bg-stone-950 border-2 border-stone-700" />
-              }
-            />
-            <ColorOption
-              label="Random"
-              description="Coin flip"
-              selected={pendingColor === "random"}
-              onClick={() => setPendingColor("random")}
-              swatch={
-                <span className="size-8 rounded-full overflow-hidden border-2 border-stone-700 flex">
-                  <span className="w-1/2 h-full bg-stone-100" />
-                  <span className="w-1/2 h-full bg-stone-950" />
-                </span>
-              }
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setColorPickFor(null)} className="text-stone-300">
-              Cancel
-            </Button>
-            <Button onClick={confirmChallenge} className="bg-amber-500 text-stone-950 hover:bg-amber-400">
-              <Swords className="size-4 mr-1.5" />
-              Send Challenge
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
-  );
-}
-
-// Color option tile used by the color picker dialog.
-function ColorOption({
-  label,
-  description,
-  selected,
-  onClick,
-  swatch,
-}: {
-  label: string;
-  description: string;
-  selected: boolean;
-  onClick: () => void;
-  swatch: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-        selected
-          ? "border-amber-500 bg-amber-500/10"
-          : "border-stone-700 bg-stone-950/40 hover:border-stone-600 hover:bg-stone-900"
-      }`}
-    >
-      {swatch}
-      <div className="text-center">
-        <div className={`text-sm font-semibold ${selected ? "text-amber-300" : "text-stone-200"}`}>
-          {label}
-        </div>
-        <div className="text-[10px] text-stone-500 mt-0.5">{description}</div>
-      </div>
-    </button>
   );
 }
 

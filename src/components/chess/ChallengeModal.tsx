@@ -44,9 +44,9 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
     if (!profile) return;
     setBusy(true);
     try {
-      const { gameId, myColor } = await acceptChallenge(challenge, profile);
-      // Accepter plays the opposite color of what the challenger picked.
-      setActiveGame(gameId, null, myColor);
+      const gameId = await acceptChallenge(challenge, profile);
+      // Challenger plays white, accepter plays black
+      setActiveGame(gameId, null, "black");
       setView("game");
       toast({ title: "Challenge accepted!", description: "Match starting…" });
     } catch (e: unknown) {
@@ -109,25 +109,6 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
               <div className="flex items-center gap-2 mb-5 text-stone-400 text-sm">
                 <AlertCircle className="size-4 text-stone-500" />
                 Accept within 5 minutes or the challenge expires.
-              </div>
-
-              {/* Show the color the challenger wants to play.
-                  Accepter will automatically get the opposite color. */}
-              <div className="flex items-center gap-3 mb-5 p-3 rounded-lg bg-stone-950/60 border border-stone-800">
-                <span className="text-xs text-stone-500 uppercase tracking-wider">They want to play</span>
-                <div className="flex items-center gap-2">
-                  <ColorChip choice={challenge.challengerColor ?? "white"} />
-                  <span className="text-xs text-stone-400">
-                    — you&apos;ll play{" "}
-                    <span className="text-amber-300 font-semibold">
-                      {(challenge.challengerColor ?? "white") === "white"
-                        ? "Black"
-                        : (challenge.challengerColor ?? "white") === "black"
-                          ? "White"
-                          : "a random side (decided on accept)"}
-                    </span>
-                  </span>
-                </div>
               </div>
 
               <div className="flex gap-2">
@@ -219,36 +200,5 @@ export function ChallengeExpiredNotice() {
     <div className="rounded-xl border border-stone-800 bg-stone-900/40 p-3 text-center text-xs text-stone-500">
       A challenge expired (no response in {Math.floor(CHALLENGE_TTL_MS / 60000)} min).
     </div>
-  );
-}
-
-// Small visual chip used inside the IncomingChallengeModal to show
-// which color the challenger picked.
-function ColorChip({ choice }: { choice: "white" | "black" | "random" }) {
-  if (choice === "random") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-800 border border-stone-700 text-stone-200 text-xs font-semibold">
-        <span className="flex">
-          <span className="size-3 rounded-l-sm bg-stone-100 border border-stone-300" />
-          <span className="size-3 rounded-r-sm bg-stone-950 border border-stone-700" />
-        </span>
-        Random
-      </span>
-    );
-  }
-  const isWhite = choice === "white";
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-        isWhite
-          ? "bg-stone-100 text-stone-900 border-stone-300"
-          : "bg-stone-950 text-stone-100 border-stone-700"
-      }`}
-    >
-      <span
-        className={`size-3 rounded-sm ${isWhite ? "bg-white border border-stone-300" : "bg-stone-950 border border-stone-600"}`}
-      />
-      {isWhite ? "White" : "Black"}
-    </span>
   );
 }

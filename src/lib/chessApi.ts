@@ -39,7 +39,7 @@ import type {
   PieceColor,
   GameStatus,
 } from "./types";
-import { CHALLENGE_TTL_MS, INITIAL_TIME_MS } from "./types";
+import { CHALLENGE_TTL_MS } from "./types";
 
 const USERS = "users";
 const CHALLENGES = "challenges";
@@ -273,12 +273,7 @@ export async function searchUsersByUsername(term: string, excludeUid: string | n
 
 // ----- challenges ------------------------------------------------------
 
-export async function sendChallenge(
-  from: UserProfile,
-  toUid: string,
-  toName: string,
-  challengerColor: "white" | "black" | "random" = "white"
-): Promise<string> {
+export async function sendChallenge(from: UserProfile, toUid: string, toName: string): Promise<string> {
   const { db } = getFirebase();
   if (!db) throw new Error("Firestore not ready");
   const now = Date.now();
@@ -292,7 +287,6 @@ export async function sendChallenge(
     createdAt: now,
     expiresAt: now + CHALLENGE_TTL_MS,
     gameId: null,
-    challengerColor,
   };
   const ref = await addDoc(collection(db, CHALLENGES), payload);
   return ref.id;
@@ -310,37 +304,14 @@ export async function declineChallenge(id: string): Promise<void> {
   await updateDoc(doc(db, CHALLENGES, id), { status: "declined" });
 }
 
-export async function acceptChallenge(challenge: Challenge, myProfile: UserProfile): Promise<{ gameId: string; myColor: PieceColor }> {
+export async function acceptChallenge(challenge: Challenge, myProfile: UserProfile): Promise<string> {
   const { db } = getFirebase();
   if (!db) throw new Error("Firestore not ready");
-  // Resolve the challenger's chosen color. Backward-compatible: if the
-  // challenge has no `challengerColor` field (older client), default to white.
-  const choice: "white" | "black" | "random" = challenge.challengerColor ?? "white";
-  let challengerPlaysWhite: boolean;
-  if (choice === "white") {
-    challengerPlaysWhite = true;
-  } else if (choice === "black") {
-    challengerPlaysWhite = false;
-  } else {
-    // random — flip a coin client-side and commit the result.
-    challengerPlaysWhite = Math.random() < 0.5;
-  }
-  let whiteUid: string;
-  let whiteName: string;
-  let blackUid: string;
-  let blackName: string;
-  if (challengerPlaysWhite) {
-    whiteUid = challenge.challengerUid;
-    whiteName = challenge.challengerName;
-    blackUid = myProfile.uid;
-    blackName = myProfile.username;
-  } else {
-    whiteUid = myProfile.uid;
-    whiteName = myProfile.username;
-    blackUid = challenge.challengerUid;
-    blackName = challenge.challengerName;
-  }
-  const myColor: PieceColor = challengerPlaysWhite ? "black" : "white";
+  // Challenger plays white, accepter plays black (simple rule; could be randomized).
+  const whiteUid = challenge.challengerUid;
+  const whiteName = challenge.challengerName;
+  const blackUid = myProfile.uid;
+  const blackName = myProfile.username;
   const now = Date.now();
   const game: Omit<GameDoc, "id"> = {
     whiteUid,
@@ -357,12 +328,10 @@ export async function acceptChallenge(challenge: Challenge, myProfile: UserProfi
     updatedAt: now,
     lastMoveAt: now,
     drawOfferBy: null,
-    whiteTimeLeftMs: INITIAL_TIME_MS,
-    blackTimeLeftMs: INITIAL_TIME_MS,
   };
   const gameRef = await addDoc(collection(db, GAMES), game);
   await updateDoc(doc(db, CHALLENGES, challenge.id), { status: "accepted", gameId: gameRef.id });
-  return { gameId: gameRef.id, myColor };
+  return gameRef.id;
 }
 
 // Listen for incoming challenges targeted at me with status pending.
@@ -429,50 +398,21 @@ export async function submitMove(
   nextTurn: PieceColor,
   pgn: string,
   status: GameStatus,
-  winnerUid?: string | null,
-  // The mover's color — used to know which clock to deduct from.
-  moverColor?: PieceColor,
-  // Remaining ms on each clock BEFORE this move (read from the live game doc).
-  // If omitted, no clock update is written (backward-compatible).
-  clocksBefore?: { whiteTimeLeftMs: number; blackTimeLeftMs: number },
-  // epoch ms when the mover's turn started (= previous lastMoveAt, or createdAt for the very first move).
-  turnStartedAt?: number
+  winnerUid?: string | null
 ): Promise<void> {
   const { db } = getFirebase();
   if (!db) return;
-  const now = Date.now();
-  const update: Record<string, unknown> = {
+  await updateDoc(doc(db, GAMES, gameId), {
     fen: nextFen,
     turn: nextTurn,
     pgn,
     status,
     winnerUid: winnerUid ?? null,
-    lastMoveAt: now,
-    updatedAt: now,
+    lastMoveAt: Date.now(),
+    updatedAt: Date.now(),
     moves: arrayUnion(move),
     drawOfferBy: null,
-  };
-  // Deduct the time the mover spent thinking from their own clock.
-  if (moverColor && clocksBefore && typeof turnStartedAt === "number") {
-    const elapsed = Math.max(0, now - turnStartedAt);
-    if (moverColor === "white") {
-      const next = Math.max(0, (clocksBefore.whiteTimeLeftMs ?? INITIAL_TIME_MS) - elapsed);
-      update.whiteTimeLeftMs = next;
-      // If the mover flagged on this move, the opponent wins on time.
-      if (next <= 0 && status === "playing") {
-        update.status = "resigned";
-        // winnerUid is supplied by the caller (the mover's opponent) — caller is responsible
-        // for passing it. We won't override it here if the caller already set a status.
-      }
-    } else {
-      const next = Math.max(0, (clocksBefore.blackTimeLeftMs ?? INITIAL_TIME_MS) - elapsed);
-      update.blackTimeLeftMs = next;
-      if (next <= 0 && status === "playing") {
-        update.status = "resigned";
-      }
-    }
-  }
-  await updateDoc(doc(db, GAMES, gameId), update);
+  });
 }
 
 export async function offerDraw(gameId: string, uid: string): Promise<void> {
@@ -492,13 +432,6 @@ export async function respondDraw(gameId: string, accept: boolean, winnerUid?: s
 }
 
 export async function resignGame(gameId: string, winnerUid: string): Promise<void> {
-  const { db } = getFirebase();
-  if (!db) return;
-  await updateDoc(doc(db, GAMES, gameId), { status: "resigned", winnerUid, updatedAt: Date.now() });
-}
-
-// Called when a player's chess clock hits 0. The other player is awarded the win.
-export async function loseOnTime(gameId: string, winnerUid: string): Promise<void> {
   const { db } = getFirebase();
   if (!db) return;
   await updateDoc(doc(db, GAMES, gameId), { status: "resigned", winnerUid, updatedAt: Date.now() });

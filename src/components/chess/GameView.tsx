@@ -18,11 +18,6 @@ import {
   Volume2,
   VolumeX,
   RotateCcw,
-  Sun,
-  Moon,
-  Maximize,
-  Minimize,
-  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,43 +39,14 @@ import {
   offerDraw,
   respondDraw,
   finalizeStats,
-  loseOnTime,
 } from "@/lib/chessApi";
 import type { GameDoc, PieceColor, GameStatus } from "@/lib/types";
-import { INITIAL_TIME_MS } from "@/lib/types";
 
 function fmtTime(ms: number): string {
   const s = Math.max(0, Math.floor(ms / 1000));
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}:${r.toString().padStart(2, "0")}`;
-}
-
-// The 5 board color themes — identical palette to the offline chess-game.html.
-// `light`/`dark` are used for the swatch buttons in the picker; the actual
-// board square colors come from the CSS variables in globals.css
-// (`.chess-board-wrap[data-board-theme="..."]`).
-const BOARD_THEMES: {
-  id: "classic" | "tournament" | "midnight" | "oceanic" | "sunset";
-  name: string;
-  light: string;
-  dark: string;
-}[] = [
-  { id: "classic", name: "Classic Walnut", light: "#f0d9b5", dark: "#b58863" },
-  { id: "tournament", name: "Tournament Field", light: "#ececd7", dark: "#739552" },
-  { id: "midnight", name: "Midnight Slate", light: "#d6d3d1", dark: "#57534e" },
-  { id: "oceanic", name: "Oceanic Depths", light: "#e9edf0", dark: "#4b7399" },
-  { id: "sunset", name: "Velvet Sunset", light: "#fed7aa", dark: "#9a3412" },
-];
-
-// Simple "level" tier shown on the player cards, derived from total wins.
-// This mirrors the spirit of the offline game's level badge without
-// requiring a separate ranking system.
-function levelFromWins(wins: number): { label: string; tone: string } {
-  if (wins >= 50) return { label: "Master", tone: "text-amber-300" };
-  if (wins >= 20) return { label: "Skilled", tone: "text-emerald-300" };
-  if (wins >= 5) return { label: "Casual", tone: "text-sky-300" };
-  return { label: "Beginner", tone: "text-stone-300" };
 }
 
 export default function GameView() {
@@ -105,20 +71,6 @@ export default function GameView() {
   const audioCtxRef = useRef<AudioContext | null>(null);
   const finalizedRef = useRef<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
-
-  // NEW: UI state for the offline-style top bar controls.
-  // - isDark toggles the .light-mode class on the root container
-  // - isFocus hides everything except the top bar + the board
-  // - boardTheme drives the data-board-theme attribute on .chess-board-wrap
-  const [isDark, setIsDark] = useState(true);
-  const [isFocus, setIsFocus] = useState(false);
-  const [boardTheme, setBoardTheme] =
-    useState<"classic" | "tournament" | "midnight" | "oceanic" | "sunset">("classic");
-
-  // NEW: ticking "now" timestamp — used to count down the active player's
-  // chess clock on the client side (the source of truth remains Firestore;
-  // we just render a live countdown).
-  const [now, setNow] = useState(() => Date.now());
 
   // Subscribe to game doc
   useEffect(() => {
@@ -168,23 +120,13 @@ export default function GameView() {
     finalizeStats(activeGame).catch(() => {});
   }, [activeGame]);
 
-  // Per-turn elapsed timer (count-up; kept for the small "turn elapsed"
-  // indicator next to the move list — independent from the chess clock)
+  // Per-turn elapsed timer (count-up; no per-game clock in v1)
   useEffect(() => {
     if (!activeGame || activeGame.status !== "playing") return;
     const id = setInterval(() => {
-      const nowT = Date.now();
-      setElapsed(nowT - activeGame.lastMoveAt);
+      const now = Date.now();
+      setElapsed(now - activeGame.lastMoveAt);
     }, 250);
-    return () => clearInterval(id);
-  }, [activeGame]);
-
-  // NEW: chess clock countdown. The active player's clock ticks down every
-  // 250ms while the game is still playing. Stored values come from Firestore
-  // (updated on every move via submitMove); we just animate between updates.
-  useEffect(() => {
-    if (!activeGame || activeGame.status !== "playing") return;
-    const id = setInterval(() => setNow(Date.now()), 250);
     return () => clearInterval(id);
   }, [activeGame]);
 
@@ -258,60 +200,6 @@ export default function GameView() {
     return { mine: myCaptured, opp: oppCaptured };
   }, [activeGame, profile.uid]);
 
-  // NEW: live chess-clock computations. These recompute every tick (every
-  // 250ms) for the player whose turn it currently is. The other player's
-  // clock stays at the last stored value.
-  const whiteClockMs = useMemo(() => {
-    if (!activeGame) return INITIAL_TIME_MS;
-    const stored = activeGame.whiteTimeLeftMs ?? INITIAL_TIME_MS;
-    if (activeGame.status !== "playing") return stored;
-    if (activeGame.turn !== "white") return stored;
-    return Math.max(0, stored - (now - activeGame.lastMoveAt));
-  }, [activeGame, now]);
-
-  const blackClockMs = useMemo(() => {
-    if (!activeGame) return INITIAL_TIME_MS;
-    const stored = activeGame.blackTimeLeftMs ?? INITIAL_TIME_MS;
-    if (activeGame.status !== "playing") return stored;
-    if (activeGame.turn !== "black") return stored;
-    return Math.max(0, stored - (now - activeGame.lastMoveAt));
-  }, [activeGame, now]);
-
-  // NEW: auto-flag when a player's clock reaches 0. Either client can do
-  // this — first one to call loseOnTime wins the race (Firestore will
-  // simply overwrite an already-finished game's status, which is fine).
-  const timeOutHandledRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (!activeGame || activeGame.status !== "playing") return;
-    if (timeOutHandledRef.current === activeGame.id) return;
-    if (whiteClockMs <= 0) {
-      timeOutHandledRef.current = activeGame.id;
-      loseOnTime(activeGame.id, activeGame.blackUid).catch(() => {
-        timeOutHandledRef.current = null;
-      });
-      toast({
-        title: "White ran out of time",
-        description: `${activeGame.whiteName} flagged — ${activeGame.blackName} wins on time.`,
-        variant: "destructive",
-      });
-    } else if (blackClockMs <= 0) {
-      timeOutHandledRef.current = activeGame.id;
-      loseOnTime(activeGame.id, activeGame.whiteUid).catch(() => {
-        timeOutHandledRef.current = null;
-      });
-      toast({
-        title: "Black ran out of time",
-        description: `${activeGame.blackName} flagged — ${activeGame.whiteName} wins on time.`,
-        variant: "destructive",
-      });
-    }
-  }, [activeGame, whiteClockMs, blackClockMs, toast]);
-
-  // Reset timeout guard when we switch to a new game.
-  useEffect(() => {
-    timeOutHandledRef.current = null;
-  }, [activeGameId]);
-
   // Draw offer state
   useEffect(() => {
     if (!activeGame) return;
@@ -363,14 +251,7 @@ export default function GameView() {
         turn,
         pgn,
         status,
-        winnerUid,
-        // NEW: chess clock info — deduct my thinking time from my own clock.
-        myColor ?? undefined,
-        {
-          whiteTimeLeftMs: activeGame.whiteTimeLeftMs ?? INITIAL_TIME_MS,
-          blackTimeLeftMs: activeGame.blackTimeLeftMs ?? INITIAL_TIME_MS,
-        },
-        activeGame.lastMoveAt
+        winnerUid
       );
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Move failed";
@@ -378,7 +259,7 @@ export default function GameView() {
     } finally {
       setBusy(false);
     }
-  }, [activeGame, isMyTurn, busy, profile.uid, myColor, toast]);
+  }, [activeGame, isMyTurn, busy, profile.uid, toast]);
 
   // react-chessboard v5: handlers receive { piece, square }
   const onSquareClick = useCallback(({ square }: { piece: unknown; square: string }) => {
@@ -504,22 +385,7 @@ export default function GameView() {
     }
   }
 
-  // CHANGED: the back button now means "resign" while a match is in
-  // progress. If the game is already over, it just returns to the lobby.
-  // The resign confirmation dialog lets the user back out if they pressed
-  // back by accident.
   function handleLeave() {
-    if (activeGame && activeGame.status === "playing") {
-      setResignDialog(true);
-    } else {
-      setActiveGame(null, null, null);
-      setView("lobby");
-    }
-  }
-
-  // After the game ends, "leave" just navigates back without resigning
-  // (the game is already over).
-  function handleLeaveAfterGame() {
     setActiveGame(null, null, null);
     setView("lobby");
   }
@@ -535,6 +401,8 @@ export default function GameView() {
     );
   }
 
+  const topPlayer = opponent;
+  const bottomPlayer = me;
   const boardOrientation = myColor === "white" ? "white" : "black";
 
   // Build square styles object combining highlights (matches offline game)
@@ -556,210 +424,73 @@ export default function GameView() {
   const oppMaterial = materialValue(captured.opp);
   const materialDiff = myMaterial - oppMaterial;
 
-  // Compute each player's level from wins (only available for me; opponent
-  // shows a neutral "Player" label since we don't have their stats loaded).
-  const myLevel = levelFromWins(profile.wins);
-
-  // Helper class names so the same component renders correctly in both
-  // dark (default) and light theme (driven by the `.light-mode` class on
-  // the root container).
-  const rootCls = `min-h-screen flex flex-col bg-stone-950 ${!isDark ? "light-mode" : ""}`;
-  const headerCls = `border-b ${isDark ? "border-stone-900 bg-stone-950/90" : "border-stone-300 bg-stone-50/95"} backdrop-blur-sm sticky top-0 z-30`;
-  const headerTextPrimary = isDark ? "text-stone-100" : "text-stone-900";
-  const headerTextMuted = isDark ? "text-stone-500" : "text-stone-500";
-  const headerTextSubtle = isDark ? "text-stone-400" : "text-stone-600";
-  const ctrlBtnCls = `size-9 rounded-xl border transition-all ${
-    isDark
-      ? "border-stone-800 bg-stone-900 hover:bg-stone-800 hover:border-stone-700 text-stone-400 hover:text-stone-200"
-      : "border-stone-300 bg-white hover:bg-stone-100 hover:border-stone-400 text-stone-600 hover:text-stone-900"
-  }`;
-  const cardCls = `rounded-xl border p-3 ${isDark ? "border-stone-800 bg-stone-900/60" : "border-stone-300 bg-white"}`;
-  const subCardCls = `rounded-2xl border overflow-hidden shadow-md ${isDark ? "border-stone-800 bg-stone-900" : "border-stone-300 bg-white"}`;
-  const actionBtnCls = isDark
-    ? "border-stone-800 bg-stone-900 text-stone-200 hover:bg-stone-800"
-    : "border-stone-300 bg-white text-stone-800 hover:bg-stone-100";
-
   return (
-    <div className={rootCls}>
-      {/* Top bar — matches the offline game's 3-button control row:
-          sound toggle · theme toggle · focus mode. The back button now
-          doubles as "resign" during an active match (see handleLeave). */}
-      <header className={headerCls}>
+    <div className="min-h-screen flex flex-col bg-stone-950">
+      {/* Top bar — merged with offline look */}
+      <header className="border-b border-stone-900 bg-stone-950/90 backdrop-blur-sm sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 h-12 flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleLeave}
-            className={isDark ? "text-stone-400 hover:text-stone-200 hover:bg-stone-800/60" : "text-stone-600 hover:text-stone-900 hover:bg-stone-200/60"}
-            title={activeGame.status === "playing" ? "Resign and return to lobby" : "Return to lobby"}
+            className="text-stone-400 hover:text-stone-200 hover:bg-stone-800/60"
           >
             <ArrowLeft className="size-4" />
-            <span className="ml-1.5 hidden sm:inline">
-              {activeGame.status === "playing" ? "Resign" : "Lobby"}
-            </span>
+            <span className="ml-1.5 hidden sm:inline">Lobby</span>
           </Button>
           <div className="size-7 rounded bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-sm">
             <Crown className="size-4 text-stone-950" />
           </div>
           <div className="flex flex-col leading-none">
-            <span className={`text-sm font-semibold tracking-tight ${headerTextPrimary}`}>
+            <span className="text-sm font-semibold text-stone-100 tracking-tight">
               Grandmaster&apos;s Arena
             </span>
-            <span className={`text-[10px] uppercase tracking-wider mt-0.5 hidden sm:inline ${headerTextMuted}`}>
-              {isFocus ? "Focus Mode · Online Multiplayer" : "Online Multiplayer · 15 min clock"}
+            <span className="text-[10px] text-stone-500 uppercase tracking-wider mt-0.5 hidden sm:inline">
+              Focus Mode · Online Multiplayer
             </span>
           </div>
           <Badge
             variant="outline"
-            className={`ml-1 text-[10px] ${isDark ? "border-stone-700 text-stone-300" : "border-stone-300 text-stone-700"}`}
+            className="ml-1 border-stone-700 text-stone-300 text-[10px]"
           >
             <CircleDot
               className={`size-2.5 mr-1 ${
-                isMyTurn ? "text-emerald-400 dot-online" : isDark ? "text-stone-600" : "text-stone-400"
+                isMyTurn ? "text-emerald-400 dot-online" : "text-stone-600"
               }`}
             />
             {isMyTurn ? "Your move" : "Waiting…"}
           </Badge>
           <div className="flex-1" />
-
-          {/* The 3 offline-style control buttons — sound, theme, focus */}
           <Button
             variant="ghost"
             size="icon"
+            className="size-8 text-stone-400 hover:text-stone-200"
             onClick={() => setMuted((m) => !m)}
-            title={muted ? "Enable Audio" : "Disable Audio"}
-            className={ctrlBtnCls}
+            title={muted ? "Enable audio" : "Disable audio"}
           >
             {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsDark((d) => !d)}
-            title="Toggle Light/Dark Mode"
-            className={ctrlBtnCls}
-          >
-            {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsFocus((f) => !f)}
-            title={
-              isFocus
-                ? "Exit Focus Mode"
-                : "Enter Focus Mode — hide everything except the board"
-            }
-            className={`size-9 rounded-xl border transition-all ${
-              isFocus
-                ? "border-amber-500 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                : ctrlBtnCls
-            }`}
-          >
-            {isFocus ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
           </Button>
         </div>
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 md:py-6">
-        {/* Player cards row — MY card first, OPPONENT card after.
-            Both show: avatar, level label, username, and color chip.
-            Hidden entirely in focus mode. */}
-        {!isFocus && (
-          <div className="grid sm:grid-cols-2 gap-3 mb-3">
-            <PlayerCard
-              name={me.name}
-              color={me.color}
-              levelLabel={`Level: ${myLevel.label}`}
-              levelTone={myLevel.tone}
-              stats={`${profile.wins}W · ${profile.losses}L · ${profile.draws}D`}
-              photoURL={profile.photoURL}
-              isMe
-              isDark={isDark}
-            />
-            <PlayerCard
-              name={opponent.name}
-              color={opponent.color}
-              levelLabel="Level: Opponent"
-              levelTone={isDark ? "text-stone-400" : "text-stone-500"}
-              stats="Online now"
-              photoURL={null}
-              isOpponent
-              isDark={isDark}
-            />
-          </div>
-        )}
-
-        {/* 2 Lost Pieces boxes — show the pieces each player has lost
-            (i.e. the pieces the OTHER player captured from them).
-            Hidden in focus mode. */}
-        {!isFocus && (
-          <div className="grid sm:grid-cols-2 gap-3 mb-3">
-            <LostBox
-              title="Your Lost Pieces"
-              subtitle={materialDiff < 0 ? `Down ${-materialDiff} material` : materialDiff > 0 ? `Up ${materialDiff} material` : "Even"}
-              // "My lost pieces" = pieces the opponent captured from me = captured.opp
-              types={captured.opp}
-              // These pieces belong to me — render in my color's glyph shade.
-              ownerColor={me.color}
-              isDark={isDark}
-            />
-            <LostBox
-              title="Opponent's Lost Pieces"
-              subtitle={materialDiff > 0 ? `Up ${materialDiff} material` : materialDiff < 0 ? `Down ${-materialDiff} material` : "Even"}
-              // "Opponent lost pieces" = pieces I captured = captured.mine
-              types={captured.mine}
-              ownerColor={opponent.color}
-              isDark={isDark}
-            />
-          </div>
-        )}
-
-        {/* Board color picker — 5 theme swatches, exactly like the offline page.
-            Hidden in focus mode. */}
-        {!isFocus && (
-          <div className={`flex items-center gap-2 mb-3 flex-wrap ${isDark ? "" : "text-stone-700"}`}>
-            <Palette className={`size-4 ${isDark ? "text-stone-500" : "text-stone-500"}`} />
-            <span className={`text-[10px] uppercase tracking-wider ${headerTextMuted}`}>Board Theme</span>
-            <div className="flex items-center gap-1.5 ml-1">
-              {BOARD_THEMES.map((t) => {
-                const selected = boardTheme === t.id;
-                return (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setBoardTheme(t.id)}
-                    title={t.name}
-                    className={`size-7 rounded-md overflow-hidden border-2 transition-all ${
-                      selected
-                        ? "border-amber-400 ring-2 ring-amber-400/40 scale-105"
-                        : isDark
-                          ? "border-stone-700 hover:border-stone-500"
-                          : "border-stone-300 hover:border-stone-500"
-                    }`}
-                  >
-                    <span className="flex w-full h-full">
-                      <span className="w-1/2 h-full" style={{ backgroundColor: t.light }} />
-                      <span className="w-1/2 h-full" style={{ backgroundColor: t.dark }} />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className={`grid ${isFocus ? "grid-cols-1" : "xl:grid-cols-12"} gap-6 items-start`}>
+        <div className="grid xl:grid-cols-12 gap-6 items-start">
           {/* Board column — center, large, like offline focus mode */}
-          <div className={`${isFocus ? "w-full max-w-3xl mx-auto" : "xl:col-span-8"} flex flex-col items-center gap-3 w-full`}>
-            {/* The board — themed via data-board-theme (drives CSS variables) */}
-            <div
-              className="chess-board-wrap relative w-full max-w-2xl aspect-square rounded-2xl overflow-hidden border-4 md:border-8 shadow-2xl shadow-black/50"
-              data-board-theme={boardTheme}
-              style={{ borderColor: isDark ? "#1c1917" : "#a8a29e" }}
-            >
+          <div className="xl:col-span-8 flex flex-col items-center gap-3 w-full">
+            {/* Opponent (top) — captured pieces + name + timer */}
+            <PlayerBar
+              name={topPlayer.name}
+              color={topPlayer.color}
+              isTurn={activeGame.turn === topPlayer.color && activeGame.status === "playing"}
+              elapsedMs={activeGame.turn === topPlayer.color ? elapsed : 0}
+              photoURL={null}
+              capturedTypes={captured.opp}
+              materialDiff={-materialDiff}
+              isOpponent
+            />
+
+            {/* The board — Classic Walnut theme (matches offline) */}
+            <div className="chess-board-wrap relative w-full max-w-2xl aspect-square rounded-2xl overflow-hidden border-4 md:border-8 border-stone-900 shadow-2xl shadow-black/50">
               <Chessboard
                 options={{
                   position: fen,
@@ -786,14 +517,26 @@ export default function GameView() {
               )}
             </div>
 
-            {/* Action bar — hidden in focus mode (back button at top handles resign) */}
-            {!isFocus && activeGame.status === "playing" && (
+            {/* Me (bottom) — captured pieces + name + timer */}
+            <PlayerBar
+              name={bottomPlayer.name}
+              color={bottomPlayer.color}
+              isTurn={activeGame.turn === bottomPlayer.color && activeGame.status === "playing"}
+              elapsedMs={activeGame.turn === bottomPlayer.color ? elapsed : 0}
+              photoURL={profile.photoURL}
+              capturedTypes={captured.mine}
+              materialDiff={materialDiff}
+              isMe
+            />
+
+            {/* Action bar */}
+            {activeGame.status === "playing" && (
               <div className="flex gap-2 pt-1 w-full max-w-2xl">
                 <Button
                   variant="outline"
                   onClick={() => setResignDialog(true)}
                   disabled={busy}
-                  className={`flex-1 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-800 ${actionBtnCls}`}
+                  className="flex-1 border-stone-800 bg-stone-900 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-800 text-stone-200"
                 >
                   <Flag className="size-4 mr-1.5" />
                   Resign
@@ -802,17 +545,17 @@ export default function GameView() {
                   variant="outline"
                   onClick={handleOfferDraw}
                   disabled={busy || !!activeGame.drawOfferBy}
-                  className={`flex-1 hover:bg-amber-950/30 hover:text-amber-300 hover:border-amber-800 ${actionBtnCls}`}
+                  className="flex-1 border-stone-800 bg-stone-900 hover:bg-amber-950/30 hover:text-amber-300 hover:border-amber-800 text-stone-200"
                 >
                   <Handshake className="size-4 mr-1.5" />
                   {activeGame.drawOfferBy === profile.uid ? "Offered" : "Draw"}
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={handleLeaveAfterGame}
+                  onClick={handleLeave}
                   disabled={busy}
-                  className={actionBtnCls}
-                  title="Leave game (return to lobby) — also resigns if match is live"
+                  className="border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-300"
+                  title="Leave game (return to lobby)"
                 >
                   <RotateCcw className="size-4" />
                   <span className="ml-1.5 hidden sm:inline">Lobby</span>
@@ -821,89 +564,43 @@ export default function GameView() {
             )}
           </div>
 
-          {/* Right rail: 15-min chess clock + move history.
-              Hidden entirely in focus mode. */}
-          {!isFocus && (
-            <aside className="xl:col-span-4 w-full">
-              {/* 15-minute chess clock — like the offline page's timer box */}
-              <div className={subCardCls}>
-                <div className={`px-4 py-3 border-b flex items-center gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
-                  <Clock className="size-4 text-amber-400" />
-                  <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-                    Game Clock · 15 min
-                  </h3>
-                </div>
-                <div className="p-3 space-y-2">
-                  <ClockRow
-                    name={opponent.name}
-                    color={opponent.color}
-                    ms={opponent.color === "white" ? whiteClockMs : blackClockMs}
-                    isTurn={activeGame.turn === opponent.color && activeGame.status === "playing"}
-                    isDark={isDark}
-                    isMe={false}
-                  />
-                  <ClockRow
-                    name={me.name}
-                    color={me.color}
-                    ms={me.color === "white" ? whiteClockMs : blackClockMs}
-                    isTurn={activeGame.turn === me.color && activeGame.status === "playing"}
-                    isDark={isDark}
-                    isMe
-                  />
-                  <div className={`text-[10px] pt-1 ${isDark ? "text-stone-500" : "text-stone-500"}`}>
-                    Each player starts with 15:00. Clock ticks down on your turn. Run out → you lose on time.
-                  </div>
-                </div>
+          {/* Right rail: move history — matches the offline game's "Move Timeline" panel */}
+          <aside className="xl:col-span-4 w-full">
+            <div className="rounded-2xl border border-stone-800 bg-stone-900 overflow-hidden shadow-md">
+              <div className="px-4 py-3 border-b border-stone-800 flex items-center gap-2">
+                <Clock className="size-4 text-amber-400" />
+                <h3 className="text-xs font-bold text-stone-400 uppercase tracking-wider">
+                  Move Timeline
+                </h3>
               </div>
+              <MoveList game={activeGame} myUid={profile.uid} opponentName={opponent.name} myName={me.name} />
+            </div>
 
-              {/* Move timeline panel */}
-              <div className={`mt-4 ${subCardCls}`}>
-                <div className={`px-4 py-3 border-b flex items-center gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
-                  <Clock className="size-4 text-amber-400" />
-                  <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-                    Move Timeline
-                  </h3>
-                </div>
-                <MoveList
-                  game={activeGame}
-                  myUid={profile.uid}
-                  opponentName={opponent.name}
-                  myName={me.name}
-                  isDark={isDark}
-                />
-              </div>
-
-              <div className={`mt-4 rounded-2xl border p-4 text-xs leading-relaxed ${isDark ? "border-stone-800 bg-stone-900/60 text-stone-400" : "border-stone-300 bg-white text-stone-600"}`}>
-                <p className={`font-medium mb-1.5 ${isDark ? "text-stone-300" : "text-stone-800"}`}>Focus mode tips</p>
-                <ul className="space-y-1 list-disc list-inside">
-                  <li>Click a piece, then click target square to move.</li>
-                  <li>Drag-and-drop is also supported.</li>
-                  <li>Green dots = legal moves. Red rings = captures.</li>
-                  <li>Moves sync in real-time via Firestore.</li>
-                  <li>The back button = resign while a match is live.</li>
-                  <li>Press the focus button to hide everything except the board.</li>
-                </ul>
-              </div>
-            </aside>
-          )}
+            <div className="mt-4 rounded-2xl border border-stone-800 bg-stone-900/60 p-4 text-xs text-stone-400 leading-relaxed">
+              <p className="text-stone-300 font-medium mb-1.5">Focus mode tips</p>
+              <ul className="space-y-1 list-disc list-inside">
+                <li>Click a piece, then click target square to move.</li>
+                <li>Drag-and-drop is also supported.</li>
+                <li>Green dots = legal moves. Red rings = captures.</li>
+                <li>Moves sync in real-time via Firestore.</li>
+                <li>Resign or offer a draw anytime.</li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </main>
 
       <Dialog open={resignDialog} onOpenChange={setResignDialog}>
         <DialogContent className="bg-stone-900 border-stone-700 text-stone-100">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Flag className="size-5 text-rose-400" />
-              Resign this game?
-            </DialogTitle>
+            <DialogTitle>Resign this game?</DialogTitle>
             <DialogDescription className="text-stone-400">
-              Pressing the back button during a live match counts as resigning.
-              This will count as a loss — {opponent.name} will be awarded the win.
+              This will count as a loss. {opponent.name} will be awarded the win.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setResignDialog(false)} className="text-stone-300">
-              Keep playing
+              Cancel
             </Button>
             <Button onClick={handleResign} disabled={busy} className="bg-rose-500 text-white hover:bg-rose-400">
               <Flag className="size-4 mr-1.5" />
@@ -968,7 +665,7 @@ export default function GameView() {
             )}
           </div>
           <DialogFooter>
-            <Button onClick={handleLeaveAfterGame} className="bg-amber-500 text-stone-950 hover:bg-amber-400">
+            <Button onClick={handleLeave} className="bg-amber-500 text-stone-950 hover:bg-amber-400">
               Back to Lobby
             </Button>
           </DialogFooter>
@@ -978,218 +675,101 @@ export default function GameView() {
   );
 }
 
-// ----- Player card (top of page) — avatar + level + username + color chip --
+// ----- PlayerBar with captured pieces (matches offline game's captured bar) -----------
 
-function PlayerCard({
+const PIECE_GLYPHS: Record<string, string> = {
+  p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
+};
+
+function PlayerBar({
   name,
   color,
-  levelLabel,
-  levelTone,
-  stats,
+  isTurn,
+  elapsedMs,
   photoURL,
+  capturedTypes,
+  materialDiff,
   isMe,
   isOpponent,
-  isDark,
 }: {
   name: string;
   color: PieceColor;
-  levelLabel: string;
-  levelTone: string;
-  stats: string;
+  isTurn: boolean;
+  elapsedMs: number;
   photoURL: string | null;
+  capturedTypes: string[];
+  materialDiff: number;
   isMe?: boolean;
   isOpponent?: boolean;
-  isDark: boolean;
 }) {
-  const cardBg = isDark ? "border-stone-800 bg-stone-900/60" : "border-stone-300 bg-white";
-  const nameColor = isDark ? "text-stone-100" : "text-stone-900";
-  const mutedColor = isDark ? "text-stone-500" : "text-stone-500";
-  const subColor = isDark ? "text-stone-400" : "text-stone-600";
   return (
-    <div className={`rounded-xl border p-3 flex items-center gap-3 ${cardBg}`}>
-      <Avatar className={`size-10 ring-1 ${isDark ? "ring-stone-700" : "ring-stone-300"}`}>
+    <div className="w-full max-w-2xl flex items-center gap-3 px-3 py-2 rounded-xl bg-stone-900/60 border border-stone-800">
+      <Avatar className="size-9 ring-1 ring-stone-700">
         <AvatarImage src={photoURL ?? undefined} />
-        <AvatarFallback className={isDark ? "bg-stone-800 text-amber-300 text-sm" : "bg-stone-200 text-amber-700 text-sm"}>
+        <AvatarFallback className="bg-stone-800 text-amber-300 text-xs">
           {name.slice(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-semibold truncate ${nameColor}`}>{name}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-stone-100 truncate">{name}</span>
           {isMe && (
             <Badge variant="outline" className="border-amber-500/30 text-amber-300 text-[9px] px-1 py-0">
               You
             </Badge>
           )}
           {isOpponent && (
-            <Badge variant="outline" className={`text-[9px] px-1 py-0 ${isDark ? "border-stone-700 text-stone-400" : "border-stone-300 text-stone-500"}`}>
+            <Badge variant="outline" className="border-stone-700 text-stone-400 text-[9px] px-1 py-0">
               Opponent
             </Badge>
           )}
         </div>
-        <div className={`text-[10px] uppercase tracking-wider mt-0.5 ${mutedColor}`}>
-          <span className={levelTone}>{levelLabel}</span>
-          <span className="mx-1.5">·</span>
-          <span className={subColor}>{stats}</span>
-        </div>
-      </div>
-      <ColorChipBadge color={color} />
-    </div>
-  );
-}
-
-// Color chip badge used by PlayerCard.
-function ColorChipBadge({ color }: { color: PieceColor }) {
-  const isWhite = color === "white";
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold border ${
-        isWhite
-          ? "bg-stone-100 text-stone-900 border-stone-300"
-          : "bg-stone-950 text-stone-100 border-stone-700"
-      }`}
-    >
-      <span
-        className={`size-3 rounded-sm ${isWhite ? "bg-white border border-stone-300" : "bg-stone-950 border border-stone-600"}`}
-      />
-      {isWhite ? "White" : "Black"}
-    </span>
-  );
-}
-
-// ----- Lost Pieces box — shows the chessman glyphs each player has lost --
-const PIECE_GLYPHS: Record<string, string> = {
-  p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚",
-};
-
-function LostBox({
-  title,
-  subtitle,
-  types,
-  ownerColor,
-  isDark,
-}: {
-  title: string;
-  subtitle: string;
-  types: string[];
-  ownerColor: PieceColor;
-  isDark: boolean;
-}) {
-  const cardBg = isDark ? "border-stone-800 bg-stone-900/40" : "border-stone-300 bg-white";
-  const titleColor = isDark ? "text-stone-300" : "text-stone-800";
-  const subColor = isDark ? "text-stone-500" : "text-stone-500";
-  // Sort by piece value ascending so the heaviest losses show last (right side).
-  const order: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-  const sorted = [...types].sort((a, b) => (order[a] ?? 0) - (order[b] ?? 0));
-  return (
-    <div className={`rounded-xl border p-3 ${cardBg}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className={`text-[10px] uppercase tracking-wider font-bold ${titleColor}`}>{title}</span>
-        <span className={`text-[10px] ${subColor}`}>{subtitle}</span>
-      </div>
-      <div className="flex items-center gap-0.5 min-h-[28px] flex-wrap">
-        {sorted.length === 0 ? (
-          <span className={`text-[11px] italic ${subColor}`}>No pieces lost yet.</span>
-        ) : (
-          sorted.map((t, i) => (
-            <span
-              key={i}
-              className={`text-xl leading-none ${
-                ownerColor === "white"
-                  ? // The white player's lost pieces are white glyphs → on dark bg
-                    isDark ? "text-stone-100" : "text-stone-800"
-                  : // The black player's lost pieces are black glyphs → invert if needed
-                    isDark ? "text-stone-900 invert" : "text-stone-900"
-              }`}
-            >
-              {PIECE_GLYPHS[t] ?? ""}
-            </span>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ----- Clock row in the right-side Game Clock panel -----------------------
-
-function ClockRow({
-  name,
-  color,
-  ms,
-  isTurn,
-  isMe,
-  isDark,
-}: {
-  name: string;
-  color: PieceColor;
-  ms: number;
-  isTurn: boolean;
-  isMe: boolean;
-  isDark: boolean;
-}) {
-  const lowTime = ms <= 30_000; // under 30s — render in rose
-  const rowBg = isTurn
-    ? "bg-amber-500/10 border-amber-500/40"
-    : isDark
-      ? "bg-stone-950/60 border-stone-800"
-      : "bg-stone-50 border-stone-300";
-  const timeColor = lowTime
-    ? "text-rose-400"
-    : isTurn
-      ? "text-amber-300"
-      : isDark
-        ? "text-stone-300"
-        : "text-stone-800";
-  const nameColor = isDark ? "text-stone-200" : "text-stone-800";
-  const mutedColor = isDark ? "text-stone-500" : "text-stone-500";
-  return (
-    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${rowBg}`}>
-      <span
-        className={`size-3 rounded-full border ${
-          color === "white"
-            ? "bg-stone-100 border-stone-300"
-            : "bg-stone-950 border-stone-700"
-        }`}
-      />
-      <div className="flex-1 min-w-0">
-        <div className={`text-sm font-semibold truncate ${nameColor}`}>
-          {name}
-          {isMe && (
-            <span className={`ml-1.5 text-[9px] uppercase tracking-wider ${mutedColor}`}>(you)</span>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] uppercase tracking-wider text-stone-500">
+            {color === "white" ? "White" : "Black"}
+          </span>
+          {/* Captured pieces */}
+          <div className="flex items-center gap-0.5 text-stone-300 text-sm leading-none">
+            {capturedTypes.map((t, i) => (
+              <span key={i} className={color === "white" ? "text-stone-900 invert" : "text-stone-100"}>
+                {PIECE_GLYPHS[t] ?? ""}
+              </span>
+            ))}
+          </div>
+          {materialDiff > 0 && (
+            <span className="text-[10px] font-bold text-emerald-400">+{materialDiff}</span>
           )}
         </div>
-        <div className={`text-[10px] uppercase tracking-wider ${mutedColor}`}>
-          {color === "white" ? "White" : "Black"}
-        </div>
       </div>
-      <div className={`font-mono text-lg tabular-nums ${timeColor} ${lowTime && isTurn ? "animate-pulse" : ""}`}>
-        {fmtTime(ms)}
+      <div
+        className={`px-2.5 py-1.5 rounded-md font-mono text-sm tabular-nums ${
+          isTurn
+            ? "bg-amber-500/15 text-amber-300 border border-amber-500/40"
+            : "bg-stone-950/60 text-stone-500 border border-stone-800"
+        }`}
+      >
+        {isTurn ? fmtTime(elapsedMs) : "—"}
       </div>
     </div>
   );
 }
-
-// ----- Move list (right column, second panel) -----------------------------
 
 function MoveList({
   game,
   myUid,
   opponentName,
   myName,
-  isDark,
 }: {
   game: GameDoc;
   myUid: string;
   opponentName: string;
   myName: string;
-  isDark: boolean;
 }) {
   const moves = game.moves;
   if (moves.length === 0) {
     return (
       <div className="p-6 text-center text-xs text-stone-500">
-        <p className={`font-bold mb-1 ${isDark ? "text-stone-400" : "text-stone-600"}`}>No moves registered yet</p>
+        <p className="font-bold text-stone-400 mb-1">No moves registered yet</p>
         <p className="text-[10px] text-stone-600">
           {game.turn === "white" ? "White" : "Black"} to start the match.
         </p>
@@ -1204,35 +784,27 @@ function MoveList({
       black: moves[i + 1] ? { san: moves[i + 1].san, by: moves[i + 1].by } : undefined,
     });
   }
-  const headBg = isDark ? "bg-stone-900" : "bg-stone-50";
-  const headText = isDark ? "text-stone-500" : "text-stone-500";
-  const rowText = isDark ? "text-stone-300" : "text-stone-700";
-  const rowHover = isDark ? "hover:bg-amber-500/5" : "hover:bg-amber-500/10";
-  const numText = isDark ? "text-stone-600" : "text-stone-400";
-  const moveText = isDark ? "text-stone-200" : "text-stone-900";
-  const divider = isDark ? "divide-stone-800/60" : "divide-stone-200";
-  const border = isDark ? "border-stone-800" : "border-stone-300";
   return (
     <div className="max-h-[60vh] overflow-y-auto move-history-scroll">
       <table className="w-full text-left border-collapse">
-        <thead className={`sticky top-0 ${headBg}`}>
-          <tr className={`text-[10px] font-black uppercase ${headText} border-b ${border}`}>
+        <thead className="sticky top-0 bg-stone-900">
+          <tr className="text-[10px] font-black uppercase text-stone-500 border-b border-stone-800">
             <th className="py-2 px-3 text-center w-12">#</th>
             <th className="py-2 px-3">White Move</th>
             <th className="py-2 px-3">Black Move</th>
           </tr>
         </thead>
-        <tbody className={`divide-y ${divider} text-xs font-medium ${rowText}`}>
+        <tbody className="divide-y divide-stone-800/60 text-xs font-medium text-stone-300">
           {rows.map((r) => (
-            <tr key={r.num} className={`${rowHover} transition-colors`}>
-              <td className={`py-2 px-3 font-bold text-center ${numText}`}>{r.num}</td>
-              <td className={`py-2 px-3 font-semibold ${moveText}`}>
+            <tr key={r.num} className="hover:bg-amber-500/5 transition-colors">
+              <td className="py-2 px-3 font-bold text-stone-600 text-center">{r.num}</td>
+              <td className="py-2 px-3 font-semibold text-stone-200">
                 {r.white?.san ?? ""}
                 {r.white && r.white.by === myUid && (
                   <span className="ml-1 text-[9px] text-amber-400/70">(you)</span>
                 )}
               </td>
-              <td className={`py-2 px-3 font-semibold ${moveText}`}>
+              <td className="py-2 px-3 font-semibold text-stone-200">
                 {r.black?.san ?? (
                   <span className="text-[10px] italic text-stone-600 font-normal">thinking…</span>
                 )}
@@ -1249,10 +821,10 @@ function MoveList({
           key={moves.length}
           initial={{ opacity: 0, x: -4 }}
           animate={{ opacity: 1, x: 0 }}
-          className={`px-3 py-2 text-[10px] border-t ${border} ${isDark ? "bg-stone-950/40 text-stone-500" : "bg-stone-50 text-stone-500"}`}
+          className="px-3 py-2 text-[10px] text-stone-500 border-t border-stone-800/60 bg-stone-950/40"
         >
           Last move by{" "}
-          <span className={isDark ? "text-stone-300" : "text-stone-700"}>
+          <span className="text-stone-300">
             {moves[moves.length - 1]?.by === myUid ? myName : opponentName}
           </span>
         </motion.div>
