@@ -854,7 +854,7 @@
       /* ===== Online game container ===== */
       #online-game {
         max-width: 1100px; margin: 0 auto;
-        padding: 24px 20px 40px;
+        padding: 12px 20px 24px;  /* reduced top padding from 24px → 12px to tighten the gap between topbar and board */
         background: radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%);
         min-height: calc(100vh - 56px);
         position: relative;
@@ -947,7 +947,7 @@
         width: 100%;
         margin: 0 auto;
         /* CARBON COPY of offline chess.html board border:
-           - 8px solid stone-900 (#1c1917)
+           - 8px solid (color matches the theme's lightBorder — see below)
            - 16px border-radius (rounded-2xl)
            - shadow-2xl (0 25px 50px -12px rgba(0,0,0,0.25)) */
         border-radius: 16px;
@@ -955,6 +955,22 @@
         border: 8px solid #1c1917;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         background: #1c1917;
+        transition: border-color 0.3s;
+      }
+      /* OFFLINE-PARITY: Board border color matches the theme's lightBorder.
+         In the offline chess-game.html, each theme has a `lightBorder` property
+         that makes the board border match the light square color. We replicate
+         that here so the border blends with the board, not clashes with it. */
+      .chess-board[data-board-theme="classic"] { border-color: #f0d9b5; }
+      .chess-board[data-board-theme="tournament"] { border-color: #ececd7; }
+      .chess-board[data-board-theme="midnight"] { border-color: #d6d3d1; }
+      .chess-board[data-board-theme="oceanic"] { border-color: #e9edf0; }
+      .chess-board[data-board-theme="sunset"] { border-color: #fed7aa; }
+      /* In light mode, the border stays the same (matches the light square),
+         but we add a subtle outer ring for better definition against the
+         cream background. */
+      body.light-mode .chess-board {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
       }
       .chess-square {
         /* FIX: position relative + aspect-ratio 1 + min-width/height 0
@@ -1146,33 +1162,194 @@
     
     /* ===== NEW FEATURES CSS ===== */
 
-    /* Light theme — applied when body has .light-mode class */
-    body.light-mode { background: radial-gradient(circle at 50% 0%, #faf7f2 0%, #efe9df 70%) !important; color: #1c1917 !important; }
-    body.light-mode #topbar { background: rgba(255,252,247,0.95) !important; border-color: #d6cfc1 !important; }
+    /* Light theme — applied when body has .light-mode class.
+       Matches the offline chess-game.html light mode aesthetic:
+       warm cream background, paper-tone panels, amber accents. */
+    body.light-mode {
+      background: radial-gradient(circle at 50% 0%, #faf7f2 0%, #f5f0e8 60%, #ede7db 100%) !important;
+      color: #1c1917 !important;
+    }
+    body.light-mode #topbar {
+      background: rgba(255, 252, 247, 0.92) !important;
+      border-color: #e2dccd !important;
+      backdrop-filter: blur(8px);
+    }
     body.light-mode .topbar-title, body.light-mode .topbar-username { color: #1c1917 !important; }
+    body.light-mode .topbar-avatar { color: #1c1917 !important; }
     body.light-mode #home h1 { color: #1c1917 !important; }
-    body.light-mode .profile-card, body.light-mode .mode-card,
-    body.light-mode .player-row, body.light-mode .challenge-card,
-    body.light-mode .game-status, body.light-mode .move-list,
-    body.light-mode .player-bar, body.light-mode .new-player-card,
-    body.light-mode .new-lost-box, body.light-mode .new-clock-panel,
-    body.light-mode .new-board-picker, body.light-mode #lobby,
-    body.light-mode .search-box { background: #fff !important; color: #1c1917 !important; border-color: #e2dccd !important; }
-    body.light-mode .lobby-empty, body.light-mode .status-hint,
-    body.light-mode .player-bar-color, body.light-mode .new-lost-subtitle,
-    body.light-mode .new-clock-hint, body.light-mode .new-board-picker-label,
-    body.light-mode .new-player-level, body.light-mode .new-player-stats { color: #6b6256 !important; }
+    body.light-mode #online-game {
+      background: radial-gradient(ellipse at top, #faf7f2 0%, #f0ebe0 70%) !important;
+    }
+    body.light-mode #online-game::before {
+      background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.06) 0%, transparent 60%) !important;
+    }
+    /* Panels — warm paper tone, not stark white */
+    body.light-mode .profile-card,
+    body.light-mode .mode-card,
+    body.light-mode .player-row,
+    body.light-mode .challenge-card,
+    body.light-mode .game-status,
+    body.light-mode .move-list,
+    body.light-mode .player-bar,
+    body.light-mode .new-player-card,
+    body.light-mode .new-lost-box,
+    body.light-mode .new-clock-panel,
+    body.light-mode .new-board-picker,
+    body.light-mode #lobby,
+    body.light-mode .search-box {
+      background: #ffffff !important;
+      color: #1c1917 !important;
+      border-color: #e2dccd !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    }
+    /* Player card gradient override for light mode */
+    body.light-mode .new-player-card {
+      background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%) !important;
+      border-color: #e2dccd !important;
+    }
+    body.light-mode .new-player-card:hover { border-color: rgba(245, 158, 11, 0.4) !important; }
+    body.light-mode .new-player-name { color: #1c1917 !important; }
+    body.light-mode .new-player-level { color: #78716c !important; }
+    body.light-mode .new-player-stats { color: #a8a29e !important; }
+    /* Lost pieces */
+    body.light-mode .new-lost-box {
+      background: #fdfbf7 !important;
+      border-color: #e2dccd !important;
+    }
+    body.light-mode .new-lost-title { color: #78716c !important; }
+    body.light-mode .new-lost-subtitle { color: #a8a29e !important; }
+    body.light-mode .new-lost-pieces .glyph.white-piece { color: #1c1917 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.15) !important; }
+    body.light-mode .new-lost-pieces .glyph.black-piece { color: #1c1917 !important; }
+    body.light-mode .new-lost-pieces .empty { color: #a8a29e !important; }
+    /* Board picker */
+    body.light-mode .new-board-picker {
+      background: #fdfbf7 !important;
+      border-color: #e2dccd !important;
+    }
+    body.light-mode .new-board-picker-label { color: #78716c !important; }
+    body.light-mode .new-board-swatch { border-color: #d6cfc1 !important; }
+    /* Clock panel */
+    body.light-mode .new-clock-panel {
+      background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%) !important;
+      border-color: #e2dccd !important;
+    }
+    body.light-mode .new-clock-header {
+      background: rgba(245, 158, 11, 0.08) !important;
+      border-color: #e2dccd !important;
+      color: #d97706 !important;
+    }
+    body.light-mode .new-clock-row {
+      background: rgba(0, 0, 0, 0.03) !important;
+      border-color: #e2dccd !important;
+    }
+    body.light-mode .new-clock-row.active {
+      background: rgba(245, 158, 11, 0.12) !important;
+      border-color: rgba(245, 158, 11, 0.5) !important;
+    }
+    body.light-mode .new-clock-name { color: #1c1917 !important; }
+    body.light-mode .new-clock-color { color: #a8a29e !important; }
+    body.light-mode .new-clock-time { color: #44403c !important; }
+    body.light-mode .new-clock-row.active .new-clock-time { color: #d97706 !important; }
+    body.light-mode .new-clock-hint { color: #a8a29e !important; }
+    /* Status + moves */
+    body.light-mode .status-label { color: #78716c !important; }
+    body.light-mode .status-hint { color: #78716c !important; }
+    body.light-mode .move-list-header { color: #78716c !important; border-color: #e2dccd !important; }
+    body.light-mode .move-row { color: #44403c !important; border-color: #e2dccd !important; }
+    body.light-mode .move-num { color: #a8a29e !important; }
+    /* Misc text */
+    body.light-mode .lobby-empty,
+    body.light-mode .player-bar-color,
+    body.light-mode .player-bar-name { color: #1c1917 !important; }
+    /* Control buttons in light mode */
+    body.light-mode .tb-ctrl-btn {
+      background: #ffffff !important;
+      color: #78716c !important;
+      border-color: #d6cfc1 !important;
+    }
+    body.light-mode .tb-ctrl-btn:hover {
+      background: #faf7f2 !important;
+      color: #1c1917 !important;
+      border-color: #a8a29e !important;
+    }
+    body.light-mode .tb-ctrl-btn.active {
+      border-color: #f59e0b !important;
+      background: rgba(245, 158, 11, 0.12) !important;
+      color: #d97706 !important;
+    }
 
-    /* Focus mode — hide everything except topbar + board */
+    /* Focus mode — hide EVERYTHING except the board, like the offline page.
+       The offline chess-game.html focus mode hides the header, sidebars, and
+       all panels — leaving only the board centered and enlarged. We do the
+       same here: hide the topbar, player cards, lost boxes, board picker,
+       right sidebar, and player bars. The board becomes full-viewport.
+       A small floating "Exit Focus" button appears in the corner so the user
+       can exit focus mode (since the topbar's focus button is now hidden). */
+    body.focus-mode #topbar,
     body.focus-mode #home,
     body.focus-mode #lobby,
     body.focus-mode .new-player-cards-row,
     body.focus-mode .new-lost-row,
     body.focus-mode .new-board-picker,
     body.focus-mode .game-side-col,
-    body.focus-mode .player-bar { display: none !important; }
-    body.focus-mode .game-board-col { max-width: 700px !important; margin: 0 auto !important; }
-    body.focus-mode .online-game-grid { grid-template-columns: 1fr !important; }
+    body.focus-mode .player-bar,
+    body.focus-mode #game-error-banner { display: none !important; }
+    body.focus-mode #online-game {
+      padding: 0 !important;
+      min-height: 100vh !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: radial-gradient(ellipse at center, #1c1917 0%, #0c0a09 80%) !important;
+    }
+    body.focus-mode.light-mode #online-game {
+      background: radial-gradient(ellipse at center, #faf7f2 0%, #ede7db 80%) !important;
+    }
+    body.focus-mode .online-game-grid {
+      grid-template-columns: 1fr !important;
+      width: 100% !important;
+      max-width: min(90vh, 800px) !important;
+      margin: 0 auto !important;
+    }
+    body.focus-mode .game-board-col {
+      max-width: none !important;
+      width: 100% !important;
+    }
+    body.focus-mode .chess-board {
+      max-width: 100% !important;
+      border-width: 6px !important;
+    }
+    /* Floating exit-focus button — appears in top-right corner during focus mode */
+    .focus-exit-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 200;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      background: rgba(28, 25, 23, 0.8);
+      color: #fbbf24;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      transition: all 0.15s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .focus-exit-btn:hover {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: #f59e0b;
+      transform: scale(1.05);
+    }
+    body.light-mode .focus-exit-btn {
+      background: rgba(255, 252, 247, 0.9);
+      color: #d97706;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
 
     /* Topbar control buttons (sound, theme, focus) */
     .tb-ctrl { display: flex; align-items: center; gap: 6px; margin-right: 8px; }
@@ -3407,8 +3584,27 @@
             isFocusMode = !isFocusMode;
             document.body.classList.toggle("focus-mode", isFocusMode);
             btnFocus.classList.toggle("active", isFocusMode);
+            // Show/hide the floating exit-focus button
+            const exitBtn = document.getElementById("focus-exit-btn");
+            if (exitBtn) exitBtn.style.display = isFocusMode ? "flex" : "none";
           });
         }
+        // Floating "Exit Focus" button — created dynamically so it exists
+        // even before focus mode is first activated. Hidden by default.
+        const exitFocusBtn = document.createElement("button");
+        exitFocusBtn.id = "focus-exit-btn";
+        exitFocusBtn.className = "focus-exit-btn";
+        exitFocusBtn.innerHTML = "⛶";
+        exitFocusBtn.title = "Exit Focus Mode";
+        exitFocusBtn.style.display = "none";
+        exitFocusBtn.addEventListener("click", () => {
+          isFocusMode = false;
+          document.body.classList.remove("focus-mode");
+          const tb = document.getElementById("tb-focus");
+          if (tb) tb.classList.remove("active");
+          exitFocusBtn.style.display = "none";
+        });
+        document.body.appendChild(exitFocusBtn);
         // Board theme swatches
         document.querySelectorAll(".new-board-swatch").forEach(swatch => {
           swatch.addEventListener("click", () => {
