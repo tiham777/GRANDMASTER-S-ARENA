@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----- users ---------------------------------------------------------
+    match /users/{uid} {
+      allow read: if true;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ----- usernames (reservation collection) ----------------------------
+    // When a user claims a username, a doc is created at usernames/{usernameLower}
+    // with { uid, claimedAt }. Anyone can read (to check if taken). Only the
+    // authenticated user can create/claim. The owner can update/delete their own.
+    match /usernames/{usernameLower} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null
+                    && (resource.data.uid == request.auth.uid
+                        || request.resource.data.uid == request.auth.uid);
+      allow delete: if request.auth != null
+                    && resource.data.uid == request.auth.uid;
+    }
+
+    // ----- challenges ---------------------------------------------------
+    match /challenges/{challengeId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && (request.resource.data.fromUid == request.auth.uid
+                        || request.resource.data.toUid == request.auth.uid);
+      allow update: if request.auth != null
+                    && (resource.data.fromUid == request.auth.uid
+                        || resource.data.toUid == request.auth.uid);
+      allow delete: if false;
+    }
+
+    // ----- games --------------------------------------------------------
+    match /games/{gameId} {
+      allow read: if request.auth != null
+                  && (request.auth.uid == resource.data.whiteUid
+                      || request.auth.uid == resource.data.blackUid);
+      allow create: if request.auth != null
+                    && (request.resource.data.whiteUid == request.auth.uid
+                        || request.resource.data.blackUid == request.auth.uid);
+      allow update: if request.auth != null
+                    && (request.auth.uid == resource.data.whiteUid
+                        || request.auth.uid == resource.data.blackUid);
+      allow delete: if false;
+
+      match /moves/{moveId} {
+        allow read: if request.auth != null
+                    && (request.auth.uid == get(/databases/$(database)/documents/games/$(gameId)).data.whiteUid
+                        || request.auth.uid == get(/databases/$(database)/documents/games/$(gameId)).data.blackUid);
+        allow create: if request.auth != null
+                      && (request.auth.uid == get(/databases/$(database)/documents/games/$(gameId)).data.whiteUid
+                          || request.auth.uid == get(/databases/$(database)/documents/games/$(gameId)).data.blackUid);
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+  }
+}
