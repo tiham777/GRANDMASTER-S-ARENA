@@ -512,31 +512,54 @@ Error generating stack: `+a.message+`
             lastResultShown: null,
             checkInterval: null,
             checkForResult: function() {
-              var body = document.body;
-              var text = body.innerText || body.textContent || '';
-              var isGameOver = false;
-              var resultType = null;
-              if (/checkmate/i.test(text) && /won|wins|victory/i.test(text)) {
-                isGameOver = true;
-                if (/you won|you win|victory/i.test(text)) resultType = 'win';
-                else if (/you lost|you lose|defeat/i.test(text)) resultType = 'lose';
-                else resultType = 'win';
-              } else if (/stalemate|draw|tie/i.test(text)) {
-                isGameOver = true;
-                resultType = 'draw';
-              } else if (/resign|resigned/i.test(text) && /you|game over/i.test(text)) {
-                isGameOver = true;
-                if (/you resigned/i.test(text)) resultType = 'lose';
-                else resultType = 'win';
+              // Only check for game-over if we're actually IN a game (not on the
+              // splash screen or match config screen). We detect this by checking
+              // if the board has pieces on it (i.e., a game is in progress).
+              var board = document.querySelector('.chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"]');
+              if (!board) return;  // no board = not in a game yet
+              // Check if there's a visible game-over banner (not just any text).
+              // The offline page shows game-over text in a specific styled element
+              // with classes like "text-2xl" or "text-3xl" and amber/red color.
+              var gameOverEl = null;
+              var banners = document.querySelectorAll('[class*="text-2xl"], [class*="text-3xl"], [class*="text-xl"]');
+              for (var i = 0; i < banners.length; i++) {
+                var t = (banners[i].textContent || '').trim();
+                if (t.match(/checkmate|stalemate|draw by|insufficient|timeout|resigned|wins by/i)) {
+                  // Make sure this element is actually visible (not hidden)
+                  var rect = banners[i].getBoundingClientRect();
+                  if (rect.width > 0 && rect.height > 0) {
+                    gameOverEl = banners[i];
+                    break;
+                  }
+                }
               }
-              if (isGameOver && resultType && this.lastResultShown !== resultType) {
+              if (!gameOverEl) {
+                // No game-over banner visible — reset
+                if (this.lastResultShown !== null) {
+                  this.lastResultShown = null;
+                  var existing = document.querySelector('.game-result-overlay');
+                  if (existing) existing.remove();
+                }
+                return;
+              }
+              // We have a visible game-over banner — determine result type
+              var text = gameOverEl.textContent || '';
+              var resultType = null;
+              // Check if it's MY win or MY loss (vs Computer: I'm always white
+              // if I chose white, or the player who isn't the AI)
+              if (/white wins|you win|victory/i.test(text)) resultType = 'win';
+              else if (/black wins|you lose|defeat/i.test(text)) resultType = 'lose';
+              else if (/draw|stalemate|insufficient|tie/i.test(text)) resultType = 'draw';
+              else if (/checkmate/i.test(text)) {
+                // "White Wins by Checkmate" or "Black Wins by Checkmate"
+                // Default: if white wins, player wins (assuming player is white)
+                if (/white wins/i.test(text)) resultType = 'win';
+                else if (/black wins/i.test(text)) resultType = 'lose';
+                else resultType = 'win'; // fallback
+              }
+              if (resultType && this.lastResultShown !== resultType) {
                 this.lastResultShown = resultType;
                 this.showResult(resultType);
-              }
-              if (!isGameOver && this.lastResultShown !== null) {
-                this.lastResultShown = null;
-                var existing = document.querySelector('.game-result-overlay');
-                if (existing) existing.remove();
               }
             },
             showResult: function(type) {
