@@ -866,15 +866,19 @@
       }
       #online-game > * { position: relative; z-index: 1; }
 
-      /* ===== 2-column layout: board (left) | info (right) ===== */
+      /* ===== 3-column layout: left sidebar | board | right sidebar ===== */
       .online-game-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 320px;
-        gap: 32px;
+        grid-template-columns: 240px minmax(0, 1fr) 320px;
+        gap: 24px;
         align-items: start;
       }
-      @media (max-width: 980px) {
-        .online-game-grid { grid-template-columns: 1fr; gap: 20px; }
+      @media (max-width: 1200px) {
+        .online-game-grid { grid-template-columns: 1fr; gap: 16px; }
+      }
+      .game-left-col {
+        display: flex; flex-direction: column; gap: 12px;
+        min-width: 0;
       }
       .game-board-col {
         display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -1170,6 +1174,7 @@
     body.focus-mode .new-lost-row,
     body.focus-mode .new-board-picker,
     body.focus-mode .game-side-col,
+    body.focus-mode .game-left-col,
     body.focus-mode .player-bar { display: none !important; }
     body.focus-mode .game-board-col { max-width: 700px !important; margin: 0 auto !important; }
     body.focus-mode .online-game-grid { grid-template-columns: 1fr !important; }
@@ -1186,12 +1191,14 @@
     body.light-mode .tb-ctrl-btn { background: #fff; color: #57534e; border-color: #d6cfc1; }
     body.light-mode .tb-ctrl-btn:hover { background: #f5f5f0; color: #1c1917; }
 
-    /* Player cards row (mine first, opponent after) */
+    /* Player cards — stacked vertically in the left sidebar */
     .new-player-cards-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-      max-width: 560px; margin: 0 auto 12px auto;
+      display: flex; flex-direction: column; gap: 10px;
+      width: 100%;
     }
-    @media (max-width: 640px) { .new-player-cards-row { grid-template-columns: 1fr; } }
+    .new-player-card {
+      width: 100%;
+    }
     .new-player-card {
       display: flex; align-items: center; gap: 10px; padding: 10px 14px;
       border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
@@ -1219,12 +1226,11 @@
     .new-player-color-chip.white .swatch { background: #fff; border: 1px solid #d6d3d1; }
     .new-player-color-chip.black .swatch { background: #1c1917; border: 1px solid #57534e; }
 
-    /* Lost pieces boxes */
+    /* Lost pieces boxes — stacked vertically in the left sidebar */
     .new-lost-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
-      max-width: 560px; margin: 0 auto 12px auto;
+      display: flex; flex-direction: column; gap: 10px;
+      width: 100%;
     }
-    @media (max-width: 640px) { .new-lost-row { grid-template-columns: 1fr; } }
     .new-lost-box {
       border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
       padding: 10px 14px;
@@ -1239,10 +1245,10 @@
     body.light-mode .new-lost-pieces .glyph.black-piece { color: #1c1917; }
     .new-lost-pieces .empty { font-size: 11px; font-style: italic; color: #78716c; }
 
-    /* Board color picker */
+    /* Board color picker — in the left sidebar */
     .new-board-picker {
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-      max-width: 560px; margin: 0 auto 12px auto; padding: 8px 14px;
+      width: 100%; padding: 8px 14px;
       border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
     }
     .new-board-picker-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #a8a29e; }
@@ -1474,50 +1480,53 @@
         <div id="tab-history" class="hidden"></div>
       </div>
 
-      <!-- ONLINE GAME ROOM — 2-column layout: board (left) | info (right) -->
+      <!-- ONLINE GAME ROOM — 3-column layout: left sidebar | board | right sidebar -->
       <div id="online-game" class="hidden">
         <!-- Error banner (kept from previous patch) -->
         <div id="game-error-banner" class="game-error-banner hidden"></div>
 
-        <!-- NEW: Player cards row — MY card first, OPPONENT card after -->
-        <div class="new-player-cards-row" id="new-player-cards"></div>
-
-        <!-- NEW: Two Lost Pieces boxes -->
-        <div class="new-lost-row" id="new-lost-row"></div>
-
-        <!-- NEW: Board color picker (5 themes) -->
-        <div class="new-board-picker" id="new-board-picker">
-          <span class="new-board-picker-label">🎨 Board Theme</span>
-          <div class="new-board-swatches" id="new-board-swatches">
-            <button class="new-board-swatch selected" data-theme="classic" title="Classic Walnut">
-              <span class="half" style="background:#f0d9b5"></span><span class="half" style="background:#b58863"></span>
-            </button>
-            <button class="new-board-swatch" data-theme="tournament" title="Tournament Field">
-              <span class="half" style="background:#ececd7"></span><span class="half" style="background:#739552"></span>
-            </button>
-            <button class="new-board-swatch" data-theme="midnight" title="Midnight Slate">
-              <span class="half" style="background:#d6d3d1"></span><span class="half" style="background:#57534e"></span>
-            </button>
-            <button class="new-board-swatch" data-theme="oceanic" title="Oceanic Depths">
-              <span class="half" style="background:#e9edf0"></span><span class="half" style="background:#4b7399"></span>
-            </button>
-            <button class="new-board-swatch" data-theme="sunset" title="Velvet Sunset">
-              <span class="half" style="background:#fed7aa"></span><span class="half" style="background:#9a3412"></span>
-            </button>
-          </div>
-        </div>
-
         <div class="online-game-grid">
-          <!-- LEFT: Board with player bars above and below -->
+          <!-- LEFT SIDEBAR: Player cards + Lost pieces + Board theme picker -->
+          <div class="game-left-col">
+            <!-- Player cards — MY card first, OPPONENT card after -->
+            <div class="new-player-cards-row" id="new-player-cards"></div>
+
+            <!-- Two Lost Pieces boxes -->
+            <div class="new-lost-row" id="new-lost-row"></div>
+
+            <!-- Board color picker (5 themes) -->
+            <div class="new-board-picker" id="new-board-picker">
+              <span class="new-board-picker-label">🎨 Board Theme</span>
+              <div class="new-board-swatches" id="new-board-swatches">
+                <button class="new-board-swatch selected" data-theme="classic" title="Classic Walnut">
+                  <span class="half" style="background:#f0d9b5"></span><span class="half" style="background:#b58863"></span>
+                </button>
+                <button class="new-board-swatch" data-theme="tournament" title="Tournament Field">
+                  <span class="half" style="background:#ececd7"></span><span class="half" style="background:#739552"></span>
+                </button>
+                <button class="new-board-swatch" data-theme="midnight" title="Midnight Slate">
+                  <span class="half" style="background:#d6d3d1"></span><span class="half" style="background:#57534e"></span>
+                </button>
+                <button class="new-board-swatch" data-theme="oceanic" title="Oceanic Depths">
+                  <span class="half" style="background:#e9edf0"></span><span class="half" style="background:#4b7399"></span>
+                </button>
+                <button class="new-board-swatch" data-theme="sunset" title="Velvet Sunset">
+                  <span class="half" style="background:#fed7aa"></span><span class="half" style="background:#9a3412"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: Board only (player bars hidden — info is in left sidebar now) -->
           <div class="game-board-col">
-            <div class="player-bar" id="bar-top"></div>
+            <div class="player-bar hidden" id="bar-top"></div>
             <div class="chess-board" id="board" data-board-theme="classic"></div>
-            <div class="player-bar" id="bar-bottom"></div>
+            <div class="player-bar hidden" id="bar-bottom"></div>
           </div>
 
           <!-- RIGHT: 15-min clock + status + move history -->
           <div class="game-side-col">
-            <!-- NEW: 15-minute chess clock -->
+            <!-- 15-minute chess clock -->
             <div class="new-clock-panel" id="new-clock-panel">
               <div class="new-clock-header">⏱️ Game Clock · 15 min</div>
               <div class="new-clock-body" id="new-clock-body"></div>
