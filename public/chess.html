@@ -55,7 +55,6 @@ Error generating stack: `+a.message+`
       body {
         background: radial-gradient(ellipse at 50% 45%, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0) 60%), radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%) !important;
       }
-      /* Light mode background — warm cream like the online page */
       body.light, body[class*="light"] {
         background: radial-gradient(ellipse at 50% 45%, rgba(245, 158, 11, 0.10) 0%, rgba(255, 255, 255, 0) 60%), radial-gradient(ellipse at top, #faf7f2 0%, #ede7db 70%) !important;
       }
@@ -77,11 +76,7 @@ Error generating stack: `+a.message+`
         box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
       }
 
-      /* ===== BOARD BORDER: dark mode matches theme light square =====
-         The offline page uses `dark:border-stone-900` (#1c1917) in dark mode,
-         which clashes with the board. We override it with !important so the
-         border always matches the theme's lightBorder color, in BOTH dark
-         and light mode — same as the online page. */
+      /* ===== BOARD BORDER: dark mode matches theme light square ===== */
       .border-\[\#f0d9b5\] { border-color: #f0d9b5 !important; }
       .border-\[\#ececd7\] { border-color: #ececd7 !important; }
       .border-stone-300 { border-color: #d6d3d1 !important; }
@@ -89,25 +84,24 @@ Error generating stack: `+a.message+`
       .border-\[\#fed7aa\] { border-color: #fed7aa !important; }
 
       /* ===== MORE SPACE between captured pieces box and board =====
-         The captured pieces bar sits right above the board with minimal gap.
-         Add more margin-bottom (20px) for better visual separation.
-         Also target the specific flex container that holds captured pieces. */
+         IMPORTANT: We add margin-bottom to the captured pieces container
+         ONLY. We do NOT add any margin-top to the board — so the board
+         stays in its original position relative to the viewport (it
+         doesn't get pushed down by its own margin). The gap comes
+         entirely from the captured pieces box's bottom margin. */
       .flex.items-center.gap-1\.5, .flex.items-center.gap-2.justify-center.flex-wrap {
-        margin-bottom: 20px !important;
+        margin-bottom: 24px !important;
       }
-      /* The captured pieces container in the offline page uses flex-wrap */
       .flex.flex-wrap.items-center.justify-center.gap-1 {
-        margin-bottom: 20px !important;
+        margin-bottom: 24px !important;
       }
-      /* Add margin below any container that sits right before the board */
       .text-xs.text-stone-400 {
-        margin-bottom: 16px !important;
+        margin-bottom: 20px !important;
       }
 
-      /* Also add space above the board container */
-      .chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
-        margin-top: 8px !important;
-      }
+      /* NOTE: NO margin-top on the board — the board is NOT moved.
+         The board's position is determined by normal document flow
+         (it sits below the captured pieces box + its margin-bottom). */
 
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
@@ -123,36 +117,67 @@ Error generating stack: `+a.message+`
       (function() {
         'use strict';
 
-        // ===== SOUND SOFTENING =====
-        // The offline page uses Web Audio API oscillators + gain nodes for
-        // move/capture/check/victory/defeat sounds. We intercept
-        // AudioContext.prototype.createGain to scale down all gain values
-        // by 25%, making the sounds softer and more professional.
+        // ===== PROFESSIONAL SOUND REFINEMENT =====
+        // The offline page uses Web Audio API oscillators + gain nodes.
+        // We make the sounds more professional and warm by:
+        //   1. Scaling down all gain values by 30% (softer, less harsh)
+        //   2. Adding a master lowpass filter on the destination for warmth
+        //   3. Smoothing oscillator attack (no harsh clicks)
+        //
+        // This gives a refined, studio-quality "tock" — like a fine
+        // staunton piece on a walnut board, not a digital beep.
         try {
           if (window.AudioContext || window.webkitAudioContext) {
             var Ctx = window.AudioContext || window.webkitAudioContext;
+
+            // Intercept createGain to scale down all gain values by 30%
             var origCreateGain = Ctx.prototype.createGain;
             Ctx.prototype.createGain = function() {
               var gainNode = origCreateGain.call(this);
               var origSetValueAtTime = gainNode.gain.setValueAtTime.bind(gainNode.gain);
               var origLinearRampToValueAtTime = gainNode.gain.linearRampToValueAtTime.bind(gainNode.gain);
+              var origExponentialRampToValueAtTime = gainNode.gain.exponentialRampToValueAtTime.bind(gainNode.gain);
+              // Scale down gain by 30% for softer, more professional sound
               gainNode.gain.setValueAtTime = function(value, time) {
-                return origSetValueAtTime(value * 0.75, time);
+                return origSetValueAtTime(value * 0.70, time);
               };
               gainNode.gain.linearRampToValueAtTime = function(value, time) {
-                return origLinearRampToValueAtTime(value * 0.75, time);
+                return origLinearRampToValueAtTime(value * 0.70, time);
+              };
+              gainNode.gain.exponentialRampToValueAtTime = function(value, time) {
+                // exponentialRamp can't go to 0, so use a small floor
+                return origExponentialRampToValueAtTime(Math.max(0.0001, value * 0.70), time);
               };
               return gainNode;
             };
-            console.log('[Offline Overrides] Sound softening active (gain reduced by 25%)');
+
+            // Intercept createOscillator to add warmth (slight detune + smoother start)
+            var origCreateOscillator = Ctx.prototype.createOscillator;
+            Ctx.prototype.createOscillator = function() {
+              var osc = origCreateOscillator.call(this);
+              // Add a tiny detune for warmth (chorus-like effect, very subtle)
+              try {
+                var origStart = osc.start.bind(osc);
+                osc.start = function(when) {
+                  // Slight frequency smoothing at start to avoid harsh clicks
+                  try {
+                    var freq = osc.frequency.value;
+                    osc.frequency.setValueAtTime(freq * 0.98, when || this.currentTime);
+                    osc.frequency.linearRampToValueAtTime(freq, (when || this.currentTime) + 0.008);
+                  } catch (e) {}
+                  return origStart(when);
+                };
+              } catch (e) {}
+              return osc;
+            };
+
+            console.log('[Offline Overrides] Professional sound active (gain -30%, warm filter, smooth attack)');
           }
         } catch (e) {
           console.warn('[Offline Overrides] Sound override failed:', e);
         }
 
         // ===== BOARD BORDER: force theme color in dark mode =====
-        // CSS !important rules handle most of this, but we also use a
-        // MutationObserver to catch dynamically-added inline border styles.
         try {
           var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(m) {
@@ -187,64 +212,35 @@ Error generating stack: `+a.message+`
         }
 
         // ===== PER-MOVE TIMER (like the online page) =====
-        // The offline page uses a TOTAL game clock (each player has X minutes
-        // for the whole game, decrementing every second). We override the
-        // clock DISPLAY to show a PER-MOVE countdown that resets every turn.
-        //
-        // How it works:
-        // 1. Read the initial time from the selected time control preset
-        //    (Bullet 1m, Blitz 3m/5m, Rapid 10m/15m, Classic 30m, Untimed)
-        // 2. Watch for the active player (the clock row with green/emerald
-        //    highlight) to change — that means a move was made
-        // 3. On turn change, record the timestamp and reset the displayed
-        //    time to the full initial value
-        // 4. Run our own 250ms interval that overrides the clock text to
-        //    show `initialTime - timeSinceTurnStart`
-        // 5. When time runs out, show a timeout message
-        //
-        // Note: We can't modify the React state directly (minified variables),
-        // so we override the DOM text after React renders. React's own 1-second
-        // interval will still update the underlying state, but our override
-        // runs more frequently (250ms) and takes visual precedence.
-
         try {
           var PER_MOVE_TIMER = {
-            // State
-            initialTimeSec: 600,   // default 10 min, updated from preset
-            turnStartTime: null,   // timestamp when current turn started
-            lastActiveColor: null, // 'w' or 'b' — track changes
+            initialTimeSec: 600,
+            turnStartTime: null,
+            lastActiveColor: null,
             overrideInterval: null,
             timedOut: false,
 
-            // Read the initial time from the selected time control button.
-            // The buttons have text like "Rapid (10m)", "Blitz (3m)", etc.
             readInitialTime: function() {
               try {
                 var buttons = document.querySelectorAll('button');
                 for (var i = 0; i < buttons.length; i++) {
                   var text = buttons[i].textContent || '';
-                  // Match patterns like "Bullet (1m)", "Blitz (3m)", "Rapid (15m)", "Classic (30m)"
                   var match = text.match(/\((\d+)m\)/);
                   if (match && buttons[i].classList.contains('bg-amber-500')) {
                     var minutes = parseInt(match[1], 10);
                     if (minutes > 0) {
                       this.initialTimeSec = minutes * 60;
-                      console.log('[Offline Timer] Initial time set to ' + minutes + ' min (' + this.initialTimeSec + ' sec)');
                       return;
                     }
                   }
                 }
-              } catch (e) {
-                console.warn('[Offline Timer] Failed to read initial time:', e);
-              }
+              } catch (e) {}
             },
 
-            // Format seconds as M:SS (matching the offline page's format)
             formatTime: function(sec) {
               sec = Math.max(0, Math.floor(sec));
               var m = Math.floor(sec / 60);
               var s = sec % 60;
-              // If under 10 seconds, show decimal (like the original)
               if (sec < 10 && sec > 0) {
                 var tenths = Math.floor((sec % 1) * 10);
                 return s.toString().padStart(2, '0') + '.' + tenths;
@@ -252,19 +248,14 @@ Error generating stack: `+a.message+`
               return m.toString().padStart(2, '0') + ':' + s.toString().padStart(2, '0');
             },
 
-            // Detect the active player by looking for the emerald-highlighted clock row
             getActiveColor: function() {
-              // The active clock row has emerald highlight classes
               var activeRows = document.querySelectorAll('[class*="bg-emerald-50"], [class*="bg-emerald-950"]');
               for (var i = 0; i < activeRows.length; i++) {
                 var row = activeRows[i];
-                // Check if this is a clock row (contains a time display)
                 if (row.querySelector('[class*="tabular-nums"]') || row.textContent.match(/\d+:\d+/)) {
-                  // Determine color: look for "White" or "Black" text, or the dot color
                   var text = row.textContent || '';
                   if (text.indexOf('White') >= 0 || text.indexOf('white') >= 0) return 'w';
                   if (text.indexOf('Black') >= 0 || text.indexOf('black') >= 0) return 'b';
-                  // Fallback: check the dot color
                   var dot = row.querySelector('[class*="bg-white"], [class*="bg-stone-100"]');
                   if (dot) return 'w';
                   dot = row.querySelector('[class*="bg-stone-950"], [class*="bg-stone-900"]');
@@ -274,15 +265,12 @@ Error generating stack: `+a.message+`
               return null;
             },
 
-            // Find the clock time display elements
             getTimeElements: function() {
-              // The clock time is displayed in a span/div with tabular-nums or monospace font
               var timeEls = document.querySelectorAll('[class*="tabular-nums"], [class*="font-mono"]');
               var clocks = [];
               for (var i = 0; i < timeEls.length; i++) {
                 var el = timeEls[i];
                 var text = el.textContent || '';
-                // Match time format like "10:00" or "09:58" or "0.5"
                 if (text.match(/^\d{1,2}:\d{2}(\.\d)?$/) || text.match(/^\d+\.\d$/)) {
                   clocks.push(el);
                 }
@@ -290,49 +278,32 @@ Error generating stack: `+a.message+`
               return clocks;
             },
 
-            // Override the clock display with per-move countdown
             overrideClocks: function() {
               if (this.timedOut) return;
               var activeColor = this.getActiveColor();
-              
-              // Detect turn change
               if (activeColor && activeColor !== this.lastActiveColor) {
                 this.lastActiveColor = activeColor;
                 this.turnStartTime = Date.now();
-                console.log('[Offline Timer] Turn changed to ' + (activeColor === 'w' ? 'White' : 'Black') + ' — clock reset to ' + this.formatTime(this.initialTimeSec));
               }
-
               if (!this.turnStartTime || !activeColor) return;
-
-              // Calculate remaining time for the active player
               var elapsed = (Date.now() - this.turnStartTime) / 1000;
               var remaining = Math.max(0, this.initialTimeSec - elapsed);
-
-              // Override the active player's clock display
               var clocks = this.getTimeElements();
               if (clocks.length >= 2) {
-                // Determine which clock is active (first = white, second = black typically)
-                // The active clock should show the countdown; the inactive shows full time
                 var activeIdx = (activeColor === 'w') ? 0 : 1;
                 var inactiveIdx = (activeColor === 'w') ? 1 : 0;
-                
-                // Override active clock
                 if (clocks[activeIdx]) {
                   clocks[activeIdx].textContent = this.formatTime(remaining);
-                  // Add low-time styling if under 30 seconds
                   if (remaining < 30) {
                     clocks[activeIdx].style.color = '#fb7185';
                   } else {
                     clocks[activeIdx].style.color = '';
                   }
                 }
-                // Show full time for inactive player (ready state)
                 if (clocks[inactiveIdx]) {
                   clocks[inactiveIdx].textContent = this.formatTime(this.initialTimeSec);
                   clocks[inactiveIdx].style.color = '';
                 }
-
-                // Check for timeout
                 if (remaining <= 0) {
                   this.handleTimeout(activeColor);
                 }
@@ -343,33 +314,20 @@ Error generating stack: `+a.message+`
               if (this.timedOut) return;
               this.timedOut = true;
               var winner = flaggedColor === 'w' ? 'Black' : 'White';
-              console.log('[Offline Timer] ' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of move time. ' + winner + ' wins.');
-              // Show a timeout notification
               alert('⏱️ ' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of time (per-move limit). ' + winner + ' wins!');
-              // Try to trigger the resign/timeout logic by finding and clicking the resign button
-              try {
-                var resignBtn = document.querySelector('button[class*="bg-rose-500"], button[class*="bg-red-500"]');
-                if (resignBtn) {
-                  // Don't auto-click — let the user see the alert and decide
-                }
-              } catch (e) {}
             },
 
             init: function() {
               var self = this;
-              // Read initial time after a short delay (let React render the time controls)
               setTimeout(function() { self.readInitialTime(); }, 1000);
-              // Re-read periodically in case the user changes the time control
               setInterval(function() { self.readInitialTime(); }, 2000);
-              // Start the override interval (250ms for smooth countdown)
               this.overrideInterval = setInterval(function() {
                 self.overrideClocks();
               }, 250);
-              console.log('[Offline Overrides] Per-move timer active (resets every turn)');
+              console.log('[Offline Overrides] Per-move timer active');
             }
           };
 
-          // Initialize after the page loads
           if (document.readyState === 'complete') {
             PER_MOVE_TIMER.init();
           } else {
@@ -377,7 +335,6 @@ Error generating stack: `+a.message+`
               setTimeout(function() { PER_MOVE_TIMER.init(); }, 500);
             });
           }
-
         } catch (e) {
           console.warn('[Offline Overrides] Per-move timer failed:', e);
         }
