@@ -615,162 +615,165 @@
  }
  .btn-back:hover { background: #292524; color: #f5f5f4; }
 
- /* ===== PREMIUM HOME SCREEN — redesigned from scratch ===== */
+ /* ===== HOME SCREEN ===== */
  #home {
-   max-width: 1100px; margin: 0 auto;
-   padding: 24px 20px;
-   min-height: calc(100vh - 56px);
-   display: flex; flex-direction: column; justify-content: center;
-   gap: 20px;
+ max-width: 1000px; margin: 0 auto;
+ padding: 16px 16px;
+ min-height: calc(100vh - 56px);
+ display: flex; flex-direction: column; justify-content: center;
+ }
+ .home-header { text-align: center; margin-bottom: 20px; }
+ .home-header h1 {
+ font-size: clamp(24px, 4vw, 36px); font-weight: 900;
+ background: linear-gradient(to right, #fde68a, #f59e0b, #d97706);
+ -webkit-background-clip: text; background-clip: text;
+ -webkit-text-fill-color: transparent;
+ }
+ .home-header p {
+ font-size: 11px; text-transform: uppercase;
+ letter-spacing: 0.3em; color: rgba(245, 158, 11, 0.7);
+ margin-top: 8px;
  }
 
- /* — Hero banner — large gradient title with subtle animation */
+ /* ===== COMPACT PREMIUM HOME PAGE (no scroll, no flash) ===== */
  .home-hero {
-   text-align: center;
-   padding: 32px 24px 28px;
-   background: linear-gradient(135deg, rgba(28,25,23,0.7) 0%, rgba(41,37,36,0.5) 100%);
-   border: 1px solid rgba(245, 158, 11, 0.15);
-   border-radius: 20px;
-   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(245, 158, 11, 0.1);
-   position: relative; overflow: hidden;
+ text-align: center; margin-bottom: 20px; padding: 24px 20px;
+ background: linear-gradient(135deg, rgba(28,25,23,0.6) 0%, rgba(41,37,36,0.4) 100%);
+ border: 1px solid rgba(245, 158, 11, 0.15);
+ border-radius: 16px;
+ backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+ box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(245, 158, 11, 0.1);
+ position: relative; overflow: hidden;
  }
  .home-hero::before {
-   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-   background: linear-gradient(90deg, transparent 0%, #f59e0b 50%, transparent 100%);
-   animation: heroShine 4s ease-in-out infinite;
+ content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+ background: linear-gradient(90deg, transparent, #f59e0b, transparent);
+ animation: heroShine 3s ease-in-out infinite;
  }
  @keyframes heroShine {
-   0%, 100% { transform: translateX(-100%); opacity: 0; }
-   50% { transform: translateX(100%); opacity: 1; }
+ 0%, 100% { transform: translateX(-100%); }
+ 50% { transform: translateX(100%); }
  }
  .home-hero h1 {
-   font-size: clamp(28px, 5vw, 44px); font-weight: 900;
-   letter-spacing: -0.03em; margin-bottom: 8px;
-   background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
-   -webkit-background-clip: text; background-clip: text;
-   -webkit-text-fill-color: transparent;
-   text-shadow: 0 4px 24px rgba(245, 158, 11, 0.15);
+ font-size: clamp(28px, 5vw, 42px); font-weight: 900;
+ letter-spacing: -0.02em; margin-bottom: 8px;
+ background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
+ -webkit-background-clip: text; background-clip: text;
+ -webkit-text-fill-color: transparent;
+ text-shadow: 0 4px 24px rgba(245, 158, 11, 0.2);
  }
  .home-hero .hero-sub {
-   font-size: clamp(12px, 1.5vw, 14px); color: #a8a29e;
-   max-width: 460px; margin: 0 auto; line-height: 1.6;
+ font-size: clamp(12px, 1.5vw, 14px); color: #a8a29e;
+ max-width: 480px; margin: 0 auto; line-height: 1.5;
  }
  .home-hero .hero-tagline {
-   font-size: 10px; text-transform: uppercase; letter-spacing: 0.25em;
-   color: rgba(245, 158, 11, 0.8); margin-top: 14px;
-   display: inline-block; padding: 3px 14px;
-   border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 999px;
-   background: rgba(245, 158, 11, 0.05);
+ font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em;
+ color: rgba(245, 158, 11, 0.8); margin-top: 12px;
+ display: inline-block; padding: 3px 14px;
+ border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 999px;
+ background: rgba(245, 158, 11, 0.05);
  }
 
- /* — Profile bar — compact horizontal strip */
  .profile-card {
-   display: flex; align-items: center; justify-content: space-between;
-   padding: 12px 18px;
-   background: linear-gradient(135deg, rgba(28,25,23,0.8) 0%, rgba(41,37,36,0.6) 100%);
-   border: 1px solid rgba(245, 158, 11, 0.12);
-   border-radius: 14px;
-   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+ background: linear-gradient(135deg, rgba(28, 25, 23, 0.8) 0%, rgba(41, 37, 36, 0.6) 100%);
+ border: 1px solid rgba(245, 158, 11, 0.15);
+ border-radius: 12px;
+ padding: 12px 18px;
+ display: flex; align-items: center; justify-content: space-between;
+ margin-bottom: 16px;
+ backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+ box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+ position: relative; overflow: hidden;
+ }
+ .profile-card::before {
+ content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+ background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
  }
  .profile-info { display: flex; align-items: center; gap: 12px; }
  .profile-avatar {
-   width: 40px; height: 40px; border-radius: 50%;
-   background: linear-gradient(135deg, #f59e0b, #e11d48);
-   display: flex; align-items: center; justify-content: center;
-   font-size: 15px; font-weight: 700; color: #fff;
-   overflow: hidden;
-   box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
-   border: 2px solid rgba(255, 255, 255, 0.08);
+ width: 42px; height: 42px; border-radius: 50%;
+ background: linear-gradient(135deg, #f59e0b, #e11d48);
+ display: flex; align-items: center; justify-content: center;
+ font-size: 16px; font-weight: 700; color: #fff;
+ overflow: hidden;
+ box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
+ border: 2px solid rgba(255, 255, 255, 0.1);
  }
  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
- .profile-name { font-weight: 700; font-size: 14px; color: #f5f5f4; }
+ .profile-name { font-weight: 700; font-size: 15px; color: #f5f5f4; }
  .profile-sub { font-size: 11px; color: #a8a29e; margin-top: 1px; }
- .profile-stats { display: flex; gap: 16px; }
+ .profile-stats { display: flex; gap: 14px; }
  .stat { text-align: center; }
- .stat-val { font-size: 17px; font-weight: 800; color: #f5f5f4; }
+ .stat-val { font-size: 18px; font-weight: 800; color: #f5f5f4; }
  .stat-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #78716c; margin-top: 1px; }
 
- /* — Mode cards — the main attraction */
  .mode-grid {
-   display: grid;
-   grid-template-columns: repeat(2, 1fr);
-   gap: 16px;
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+ gap: 14px;
  }
- @media (max-width: 640px) { .mode-grid { grid-template-columns: 1fr; } }
-
  .mode-card {
-   position: relative; overflow: hidden;
-   padding: 24px 22px;
-   background: linear-gradient(135deg, rgba(28,25,23,0.85) 0%, rgba(41,37,36,0.65) 100%);
-   border: 1px solid rgba(245, 158, 11, 0.12);
-   border-radius: 16px;
-   cursor: pointer;
-   transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+ background: linear-gradient(135deg, rgba(28, 25, 23, 0.8) 0%, rgba(41, 37, 36, 0.6) 100%);
+ border: 1px solid rgba(245, 158, 11, 0.12);
+ border-radius: 14px;
+ padding: 18px 18px;
+ cursor: pointer;
+ transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+ overflow: hidden;
+ position: relative;
+ backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+ box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
  }
  .mode-card:hover {
-   transform: translateY(-4px);
-   border-color: rgba(245, 158, 11, 0.35);
-   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(245, 158, 11, 0.1);
+ border-color: rgba(245, 158, 11, 0.4);
+ transform: translateY(-3px);
+ box-shadow: 0 12px 28px rgba(245, 158, 11, 0.12), 0 0 0 1px rgba(245, 158, 11, 0.1);
  }
  .mode-card::before {
-   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+ content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
  }
- .mode-card.pvc::before { background: linear-gradient(90deg, #f59e0b, #b45309); }
- .mode-card.online::before { background: linear-gradient(90deg, #e11d48, #7c3aed); }
+ .mode-card.pvc::before { background: linear-gradient(to right, #f59e0b, #b45309); }
+ .mode-card.pvp::before { background: linear-gradient(to right, #10b981, #047857); }
+ .mode-card.online::before { background: linear-gradient(to right, #e11d48, #7c3aed); }
  .mode-card::after {
-   content: ""; position: absolute; inset: 0;
-   background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.06) 0%, transparent 60%);
-   opacity: 0; transition: opacity 0.35s; pointer-events: none;
+ content: ""; position: absolute; inset: 0;
+ background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+ opacity: 0; transition: opacity 0.3s; pointer-events: none;
  }
  .mode-card:hover::after { opacity: 1; }
-
  .mode-icon {
-   width: 48px; height: 48px; border-radius: 12px;
-   display: flex; align-items: center; justify-content: center;
-   color: #fff; margin-bottom: 14px;
-   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+ width: 44px; height: 44px; border-radius: 12px;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.02em;
+ margin-bottom: 10px;
+ box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
  }
  .mode-card.pvc .mode-icon { background: linear-gradient(135deg, #f59e0b, #b45309); }
+ .mode-card.pvp .mode-icon { background: linear-gradient(135deg, #10b981, #047857); }
  .mode-card.online .mode-icon { background: linear-gradient(135deg, #e11d48, #7c3aed); }
-
- .mode-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; color: #f5f5f4; }
- .mode-sub { font-size: 12px; color: #a8a29e; margin-bottom: 14px; }
- .mode-features { font-size: 11px; color: #d6d3d1; line-height: 1.8; }
-
+ .mode-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; color: #f5f5f4; }
+ .mode-sub { font-size: 12px; color: #a8a29e; margin-bottom: 12px; }
+ .mode-features { font-size: 11px; color: #d6d3d1; line-height: 1.7; }
+ .mode-badge {
+ position: absolute; top: 12px; right: 12px;
+ background: #e11d48; color: #fff;
+ font-size: 9px; font-weight: 700;
+ padding: 3px 8px; border-radius: 999px;
+ box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
+ }
  .btn-start {
-   width: 100%; margin-top: 16px;
-   padding: 10px;
-   border: none; border-radius: 10px;
-   font-size: 13px; font-weight: 700;
-   cursor: pointer; color: #fff;
-   transition: all 0.2s;
-   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+ width: 100%; margin-top: 12px;
+ padding: 9px;
+ border: none; border-radius: 8px;
+ font-size: 13px; font-weight: 700;
+ cursor: pointer; color: #fff;
+ transition: all 0.2s;
+ box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
  }
- .btn-start:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3); }
- .mode-card.pvc .btn-start { background: linear-gradient(135deg, #f59e0b, #b45309); }
- .mode-card.online .btn-start { background: linear-gradient(135deg, #e11d48, #7c3aed); }
-
- /* — Footer mini-bar — quick stats / branding */
- .home-footer {
-   display: flex; align-items: center; justify-content: center; gap: 8px;
-   padding: 12px 16px;
-   background: rgba(28, 25, 23, 0.4);
-   border: 1px solid rgba(168, 162, 158, 0.08);
-   border-radius: 12px;
-   backdrop-filter: blur(8px);
- }
- .home-footer-item {
-   display: flex; align-items: center; gap: 6px;
-   font-size: 11px; color: #78716c;
- }
- .home-footer-item svg { color: #f59e0b; opacity: 0.7; }
- .home-footer-divider {
-   width: 1px; height: 12px; background: rgba(168, 162, 158, 0.15);
- }
+ .btn-start:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+ .mode-card.pvc .btn-start { background: linear-gradient(to right, #f59e0b, #b45309); }
+ .mode-card.pvp .btn-start { background: linear-gradient(to right, #10b981, #047857); }
+ .mode-card.online .btn-start { background: linear-gradient(to right, #e11d48, #7c3aed); }
 
  /* ===== WIN / LOSE VIBE ANIMATIONS ===== */
  /* Full-screen overlay that plays when a game ends */
@@ -1440,6 +1443,49 @@
  body.light-mode .topbar-title, body.light-mode .topbar-username { color: #1c1917 !important; }
  body.light-mode .topbar-avatar { color: #1c1917 !important; }
  body.light-mode #home h1 { color: #1c1917 !important; }
+
+ /* ===== HOME PAGE LIGHT MODE — warm, premium, paper-tone ===== */
+ body.light-mode #home {
+   background: radial-gradient(ellipse at 50% 30%, #faf7f2 0%, #f5f0e8 50%, #ede7db 100%) !important;
+ }
+ body.light-mode .home-hero {
+   background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%) !important;
+   border-color: #e2dccd !important;
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+ }
+ body.light-mode .home-hero h1 {
+   background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #92400e 100%) !important;
+   -webkit-background-clip: text !important; background-clip: text !important;
+   -webkit-text-fill-color: transparent !important;
+   text-shadow: 0 2px 12px rgba(217, 119, 6, 0.1) !important;
+ }
+ body.light-mode .home-hero .hero-sub { color: #78716c !important; }
+ body.light-mode .home-hero .hero-tagline {
+   color: #b45309 !important;
+   border-color: #e2dccd !important;
+   background: rgba(217, 119, 6, 0.06) !important;
+ }
+ body.light-mode .profile-card {
+   background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%) !important;
+   border-color: #e2dccd !important;
+   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+ }
+ body.light-mode .profile-name { color: #1c1917 !important; }
+ body.light-mode .profile-sub { color: #78716c !important; }
+ body.light-mode .stat-val { color: #1c1917 !important; }
+ body.light-mode .stat-label { color: #a8a29e !important; }
+ body.light-mode .mode-card {
+   background: linear-gradient(135deg, #ffffff 0%, #faf7f2 100%) !important;
+   border-color: #e2dccd !important;
+   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05) !important;
+ }
+ body.light-mode .mode-card:hover {
+   border-color: rgba(217, 119, 6, 0.4) !important;
+   box-shadow: 0 16px 40px rgba(217, 119, 6, 0.1), 0 0 0 1px rgba(217, 119, 6, 0.1) !important;
+ }
+ body.light-mode .mode-title { color: #1c1917 !important; }
+ body.light-mode .mode-sub { color: #78716c !important; }
+ body.light-mode .mode-features { color: #57534e !important; }
  body.light-mode #online-game {
  background: radial-gradient(ellipse at top, #faf7f2 0%, #f0ebe0 70%) !important;
  }
@@ -1887,7 +1933,7 @@
  <div class="tb-ctrl">
  <button class="tb-ctrl-btn" id="tb-sound" title="Toggle sound"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
  <button class="tb-ctrl-btn" id="tb-theme" title="Toggle light/dark theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
- <button class="tb-ctrl-btn" id="tb-focus" title="Focus mode — hide everything except the board"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></button>
+ <button class="tb-ctrl-btn" id="tb-focus" title="Focus mode — hide everything except the board" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></button>
  </div>
  <div class="topbar-user">
  <div class="topbar-avatar" id="topbar-avatar"></div>
@@ -1909,7 +1955,7 @@
 
  <div class="mode-grid">
  <div class="mode-card pvc" id="card-pvc">
- <div class="mode-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg></div>
+ <div class="mode-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8" y2="16"></line><line x1="16" y1="16" x2="16" y2="16"></line></svg></div>
  <div class="mode-title">Play Offline</div>
  <div class="mode-sub">Challenge the AI</div>
  <div class="mode-features">
@@ -1921,7 +1967,7 @@
  </div>
 
  <div class="mode-card online" id="card-online">
- <div class="mode-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
+ <div class="mode-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg></div>
  <div class="mode-title">Play Online</div>
  <div class="mode-sub">Challenge a friend</div>
  <div class="mode-features">
@@ -1931,14 +1977,6 @@
  </div>
  <button class="btn-start">Find Players</button>
  </div>
- </div>
-
- <div class="home-footer">
- <div class="home-footer-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg> Real-time sync</div>
- <div class="home-footer-divider"></div>
- <div class="home-footer-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"></path><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.22.45 4.56 1.24"></path></svg> Win/Loss tracked</div>
- <div class="home-footer-divider"></div>
- <div class="home-footer-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Premium engine</div>
  </div>
  </div>
 
@@ -2245,6 +2283,86 @@
  }, 3200);
  })();
 
+ // ===== BACKGROUND MUSIC (BGM) — subtle chess-vibe ambient music =====
+ // Generated procedurally via Web Audio API (no external files).
+ // A slow, warm, ambient pad with gentle chord changes — gives a
+ // premium chess-lounge vibe on the home page. Controlled by the
+ // existing sound button (on/off).
+ const ChessBGM = {
+   ctx: null, master: null, playing: false, enabled: true, chordTimer: null,
+   init() {
+     if (this.ctx) return;
+     try {
+       const Ctx = window.AudioContext || window.webkitAudioContext;
+       this.ctx = new Ctx();
+       this.master = this.ctx.createGain();
+       this.master.gain.value = 0;
+       this.master.connect(this.ctx.destination);
+     } catch (e) { console.warn('BGM init failed', e); }
+   },
+   playChord(freqs) {
+     if (!this.ctx || !this.enabled) return;
+     const now = this.ctx.currentTime;
+     const dur = 6;
+     freqs.forEach(freq => {
+       const osc = this.ctx.createOscillator();
+       osc.type = 'sine';
+       osc.frequency.value = freq;
+       const g = this.ctx.createGain();
+       g.gain.setValueAtTime(0, now);
+       g.gain.linearRampToValueAtTime(0.04, now + 2);
+       g.gain.linearRampToValueAtTime(0.04, now + dur - 2);
+       g.gain.linearRampToValueAtTime(0, now + dur);
+       const lp = this.ctx.createBiquadFilter();
+       lp.type = 'lowpass'; lp.frequency.value = 800; lp.Q.value = 0.5;
+       osc.connect(g); g.connect(lp); lp.connect(this.master);
+       osc.start(now); osc.stop(now + dur + 0.5);
+     });
+   },
+   start() {
+     if (this.playing) return;
+     this.init();
+     if (!this.ctx) return;
+     this.playing = true;
+     this.enabled = soundEnabled;
+     this.master.gain.cancelScheduledValues(this.ctx.currentTime);
+     this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
+     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.5 : 0, this.ctx.currentTime + 2);
+     const chords = [
+       [220, 329.63, 440],
+       [174.61, 261.63, 349.23],
+       [261.63, 392, 523.25],
+       [196, 293.66, 392],
+     ];
+     let i = 0;
+     const playNext = () => {
+       if (!this.playing) return;
+       this.playChord(chords[i % chords.length]);
+       i++;
+       this.chordTimer = setTimeout(playNext, 6000);
+     };
+     playNext();
+   },
+   stop() {
+     this.playing = false;
+     if (this.chordTimer) { clearTimeout(this.chordTimer); this.chordTimer = null; }
+     if (this.master && this.ctx) {
+       this.master.gain.cancelScheduledValues(this.ctx.currentTime);
+       this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
+       this.master.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1);
+     }
+   },
+   setEnabled(on) {
+     this.enabled = on;
+     if (this.master && this.ctx) {
+       this.master.gain.cancelScheduledValues(this.ctx.currentTime);
+       this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
+       this.master.gain.linearRampToValueAtTime(on ? 0.5 : 0, this.ctx.currentTime + 0.5);
+     }
+   }
+ };
+ window.ChessBGM = ChessBGM;
+
  // ===== FIREBASE READY =====
  window.addEventListener("firebase-ready", initApp);
 
@@ -2492,11 +2610,20 @@
  avatar.textContent = currentUser.username[0].toUpperCase();
  }
  goHome();
+ // Start the background music (chess-lounge ambient) on the home page.
+ // Browsers require a user gesture to start AudioContext — the login
+ // click counts as that gesture, so we start BGM here.
+ if (window.ChessBGM) ChessBGM.start();
  }
 
  function goHome() {
  cleanupOnline();
  currentView = "home";
+ // Hide the focus button when returning home (only shown during games)
+ const focusBtn = document.getElementById("tb-focus");
+ if (focusBtn) focusBtn.style.display = "none";
+ // Restart BGM when returning home (it was stopped during the game)
+ if (window.ChessBGM && !ChessBGM.playing) ChessBGM.start();
  // ===== FIX: Only clear the hash if we're actually leaving a game.
  // Setting window.location.hash = "" triggers a hashchange event, which used to
  // race with applyHash() and silently drop shared game URLs on reload.
@@ -2563,6 +2690,8 @@
  // ===== LOCAL GAME (iframe to chess.html) =====
  function startLocalGame(mode) {
  currentView = "game";
+ // Stop the background music when entering a game (it's only for the home page)
+ if (window.ChessBGM) ChessBGM.stop();
  document.getElementById("btn-back").classList.add("hidden");
  document.getElementById("home").classList.add("hidden");
 
@@ -3318,6 +3447,11 @@
  document.getElementById("home").classList.add("hidden");
  document.getElementById("lobby").classList.add("hidden");
  document.getElementById("online-game").classList.remove("hidden");
+ // Show the focus button when entering a game (hidden on home/lobby)
+ const focusBtn = document.getElementById("tb-focus");
+ if (focusBtn) focusBtn.style.display = "flex";
+ // Stop the background music when entering a game (it's only for the home page)
+ if (window.ChessBGM) ChessBGM.stop();
 
  // ===== OPENING ANIMATION — plays when the match starts =====
  // Add the .match-opening class to trigger the board fade-in + slide-up,
@@ -3908,6 +4042,7 @@
  if (saved !== null) {
  soundEnabled = (saved === "1");
  if (window.ChessSound) ChessSound.enabled = soundEnabled;
+ if (window.ChessBGM) ChessBGM.setEnabled(soundEnabled);
  }
  } catch (_) {}
  // Update button icon to match current state
@@ -3937,6 +4072,8 @@
  } catch (_) {}
  }
  try { localStorage.setItem("chess-sound-enabled", soundEnabled ? "1" : "0"); } catch (_) {}
+ // Also toggle the background music
+ if (window.ChessBGM) ChessBGM.setEnabled(soundEnabled);
  btnSound.innerHTML = soundEnabled ? soundOnSvg : soundOffSvg;
  btnSound.classList.toggle("active", !soundEnabled);
  btnSound.title = soundEnabled ? "Disable sound" : "Enable sound";
