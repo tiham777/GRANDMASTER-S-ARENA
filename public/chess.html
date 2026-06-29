@@ -103,6 +103,20 @@ Error generating stack: `+a.message+`
          The board's position is determined by normal document flow
          (it sits below the captured pieces box + its margin-bottom). */
 
+      /* ===== MORE SPACE between the board and everything below it =====
+         The board container has elements below it (captured pieces, timers,
+         interface aesthetics). We add margin-bottom to the board's parent
+         container so there's a comfortable gap between the board and the
+         stuff below it — without moving the board itself. */
+      .chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
+        margin-bottom: 32px !important;
+      }
+
+      /* Also add more gap between the sections below the board */
+      .bg-stone-900\/50, .bg-stone-900\/60, .bg-stone-900\/70, .bg-stone-900\/80 {
+        margin-bottom: 16px !important;
+      }
+
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
