@@ -112,6 +112,49 @@ Error generating stack: `+a.message+`
         display: none !important;
       }
 
+      /* ===== HIDE all time-related buttons in the offline play page ===== */
+      .grid.grid-cols-2.sm\:grid-cols-4.md\:grid-cols-4.xl\:grid-cols-2.gap-1\.5 {
+        display: none !important;
+      }
+      .mb-5 > label.text-xs.font-bold.text-stone-600.mb-1\.5 {
+        display: none !important;
+      }
+
+      /* ===== COMPACT RIGHT SIDEBAR — tight, no unnecessary space ===== */
+      .xl\:col-span-5 .bg-stone-50, .xl\:col-span-5 .bg-stone-900\/50,
+      .xl\:col-span-5 .bg-stone-900\/60, .xl\:col-span-5 .bg-stone-900\/70 {
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        margin-bottom: 6px !important;
+      }
+      .xl\:col-span-5 h3 {
+        margin-bottom: 4px !important;
+        font-size: 10px !important;
+      }
+      .xl\:col-span-5 button {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+      }
+      .xl\:col-span-5 > div {
+        margin-bottom: 4px !important;
+      }
+      .xl\:col-span-5 > div:last-child {
+        margin-bottom: 0 !important;
+      }
+      .xl\:col-span-5 label {
+        font-size: 9px !important;
+        margin-bottom: 2px !important;
+      }
+      .xl\:col-span-5 .grid {
+        gap: 4px !important;
+      }
+      .xl\:col-span-5 {
+        gap: 4px !important;
+      }
+      .xl\:col-span-5 .flex {
+        gap: 4px !important;
+      }
+
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
