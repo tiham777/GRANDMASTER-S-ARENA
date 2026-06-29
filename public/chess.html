@@ -479,7 +479,7 @@ Error generating stack: `+a.message+`
               if (this.timedOut) return;
               this.timedOut = true;
               var winner = flaggedColor === 'w' ? 'Black' : 'White';
-              alert('⏱️ ' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of time (per-move limit). ' + winner + ' wins!');
+              alert('' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of time (per-move limit). ' + winner + ' wins!');
             },
 
             init: function() {
@@ -566,9 +566,9 @@ Error generating stack: `+a.message+`
               var existing = document.querySelector('.game-result-overlay');
               if (existing) existing.remove();
               var title, sub;
-              if (type === 'win') { title = '🏆 Victory!'; sub = 'You won the match'; }
-              else if (type === 'lose') { title = '💀 Defeat'; sub = 'Better luck next time'; }
-              else { title = '🤝 Draw'; sub = 'Well played'; }
+              if (type === 'win') { title = 'Victory!'; sub = 'You won the match'; }
+              else if (type === 'lose') { title = 'Defeat'; sub = 'Better luck next time'; }
+              else { title = 'Draw'; sub = 'Well played'; }
               var overlay = document.createElement('div');
               overlay.className = 'game-result-overlay ' + type;
               overlay.innerHTML = '<div class="result-text">' + title + '</div><div class="result-sub">' + sub + '</div>';
