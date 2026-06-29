@@ -67,26 +67,37 @@ Error generating stack: `+a.message+`
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
       }
 
-      /* Topbar — amber-tinted bottom border + shadow (like online page) */
-      header.sticky, header[class*="sticky"] {
+      /* Topbar — amber-tinted bottom border + shadow (dark mode, like online page) */
+      html.dark header.sticky, html.dark header[class*="sticky"] {
         background: rgba(12, 10, 9, 0.88) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
         border-bottom: 1px solid rgba(245, 158, 11, 0.12) !important;
         box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
       }
-      /* Topbar in LIGHT mode — warm cream background like the online page */
-      body.light header.sticky, body.light header[class*="sticky"],
-      body[class*="light"] header.sticky, body[class*="light"] header[class*="sticky"] {
-        background: rgba(255, 252, 247, 0.92) !important;
+      /* Topbar in LIGHT mode — warm cream background like the online page.
+         The offline page toggles the `dark` class on <html>, so light mode
+         = html WITHOUT the dark class. We target html:not(.dark). */
+      html:not(.dark) header.sticky, html:not(.dark) header[class*="sticky"] {
+        background: rgba(255, 252, 247, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
         border-bottom: 1px solid #e2dccd !important;
         box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.08) !important;
       }
-      /* Topbar text color in light mode */
-      body.light header.sticky, body.light header[class*="sticky"],
-      body.light header.sticky *, body.light header[class*="sticky"] *,
-      body[class*="light"] header.sticky, body[class*="light"] header[class*="sticky"],
-      body[class*="light"] header.sticky *, body[class*="light"] header[class*="sticky"] * {
+      /* Topbar text color in light mode — dark text on cream background */
+      html:not(.dark) header.sticky, html:not(.dark) header[class*="sticky"],
+      html:not(.dark) header.sticky *, html:not(.dark) header[class*="sticky"] * {
+        color: #1c1917 !important;
+      }
+      /* Topbar icons/buttons in light mode — keep amber accents visible */
+      html:not(.dark) header.sticky button, html:not(.dark) header[class*="sticky"] button {
+        background: rgba(255, 255, 255, 0.8) !important;
+        border-color: #d6cfc1 !important;
+        color: #57534e !important;
+      }
+      html:not(.dark) header.sticky button:hover, html:not(.dark) header[class*="sticky"] button:hover {
+        background: #faf7f2 !important;
         color: #1c1917 !important;
       }
 
@@ -129,6 +140,18 @@ Error generating stack: `+a.message+`
       /* NOTE: Do NOT add margin-bottom to the right-side panels — that would
          create unwanted extra space between the buttons/sections in the
          right sidebar. The original gap between sections is preserved. */
+
+      /* ===== REDUCE SPACE between match config sections (right sidebar) =====
+         The offline page uses mb-5 (20px) between sections like Match Type,
+         Your Color, Difficulty, Clock/Time Format. We reduce this to mb-2
+         (8px) so the buttons are closer together and the panel is more
+         compact — no more excessive gaps between sections. */
+      .grid.grid-cols-2.gap-2\.5.mb-5 { margin-bottom: 8px !important; }
+      .border.border-stone-200\/50.mb-5,
+      .border.border-stone-200\/50.dark\:border-stone-800\/50.mb-5 {
+        margin-bottom: 8px !important;
+      }
+      .flex.items-center.justify-between.mb-3 { margin-bottom: 6px !important; }
 
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
