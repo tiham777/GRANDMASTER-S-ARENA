@@ -4142,7 +4142,7 @@
  const btnCoords = document.getElementById("btn-toggle-coords");
  if (btnCoords) {
  // Load saved preference (default: coordinates ON)
- let coordsOn = true;
+ let coordsOn = false; // Default: OFF — coordinates hidden by default
  try {
  const saved = localStorage.getItem("chess-coords-on");
  if (saved !== null) coordsOn = (saved === "1");

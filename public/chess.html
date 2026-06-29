@@ -175,7 +175,14 @@ Error generating stack: `+a.message+`
          the parent — only the time-related children). */
       /* The "mt-2" Rotate Board button stays visible. */
 
-      /* ===== Smooth transitions for theme changes ===== */
+      /* ===== HIDE COORDINATES by default (both dark and light mode) =====
+         The offline page shows edge numbers/letters on the board by default.
+         We hide them via CSS so the board is clean by default, matching
+         the online page's default (coordinates OFF). */
+      .chess-coord, [class*="text-[9px]"][class*="absolute"], 
+      span[class*="text-[9px]"][class*="font-bold"][class*="opacity"] {
+        display: none !important;
+      }
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
       }
@@ -205,37 +212,50 @@ Error generating stack: `+a.message+`
         max-width: min(85vh, 650px) !important;
       }
 
-      /* ===== COMPACT RIGHT SIDEBAR — better looking, tighter spacing =====
+      /* ===== COMPACT RIGHT SIDEBAR — tight, no unnecessary space =====
          The offline page's right sidebar (Match Configuration) has panels
-         with excessive padding and margins. We make everything more compact
-         and visually polished. */
+         with excessive padding and margins. We make everything as compact
+         as possible — minimal padding, tight gaps, small fonts. */
       /* Reduce padding on all panels in the right column */
       .xl\:col-span-5 .bg-stone-50, .xl\:col-span-5 .bg-stone-900\/50,
       .xl\:col-span-5 .bg-stone-900\/60, .xl\:col-span-5 .bg-stone-900\/70 {
-        padding: 12px 14px !important;
-        border-radius: 10px !important;
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        margin-bottom: 6px !important;
       }
       /* Tighter section headers */
       .xl\:col-span-5 h3 {
-        margin-bottom: 8px !important;
-        font-size: 11px !important;
+        margin-bottom: 4px !important;
+        font-size: 10px !important;
       }
       /* Compact buttons inside the right sidebar */
       .xl\:col-span-5 button {
-        padding: 7px 10px !important;
-        font-size: 11px !important;
+        padding: 5px 8px !important;
+        font-size: 10px !important;
       }
       /* Reduce gap between right sidebar sections */
       .xl\:col-span-5 > div {
-        margin-bottom: 8px !important;
+        margin-bottom: 4px !important;
       }
       .xl\:col-span-5 > div:last-child {
         margin-bottom: 0 !important;
       }
       /* Make labels more compact */
       .xl\:col-span-5 label {
-        font-size: 10px !important;
-        margin-bottom: 4px !important;
+        font-size: 9px !important;
+        margin-bottom: 2px !important;
+      }
+      /* Reduce gap in grid layouts inside the sidebar */
+      .xl\:col-span-5 .grid {
+        gap: 4px !important;
+      }
+      /* Reduce the match config panel's own margin */
+      .xl\:col-span-5 {
+        gap: 4px !important;
+      }
+      /* Tighter flex layouts */
+      .xl\:col-span-5 .flex {
+        gap: 4px !important;
       }
 
       /* ===== SIMPLER OPENING ANIMATION for offline page =====
