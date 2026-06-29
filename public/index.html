@@ -615,165 +615,153 @@
  }
  .btn-back:hover { background: #292524; color: #f5f5f4; }
 
- /* ===== HOME SCREEN ===== */
+ /* ===== HOME SCREEN — CHESS WAR BATTLE vibe ===== */
  #home {
- max-width: 1000px; margin: 0 auto;
- padding: 16px 16px;
- min-height: calc(100vh - 56px);
- display: flex; flex-direction: column; justify-content: center;
+   max-width: 1000px; margin: 0 auto;
+   padding: 16px 16px;
+   min-height: calc(100vh - 56px);
+   display: flex; flex-direction: column; justify-content: center;
+   gap: 16px;
+   position: relative;
  }
- .home-header { text-align: center; margin-bottom: 20px; }
- .home-header h1 {
- font-size: clamp(24px, 4vw, 36px); font-weight: 900;
- background: linear-gradient(to right, #fde68a, #f59e0b, #d97706);
- -webkit-background-clip: text; background-clip: text;
- -webkit-text-fill-color: transparent;
- }
- .home-header p {
- font-size: 11px; text-transform: uppercase;
- letter-spacing: 0.3em; color: rgba(245, 158, 11, 0.7);
- margin-top: 8px;
+ /* War battle background — dark with red/amber battle glow */
+ #home::before {
+   content: ""; position: absolute; inset: 0; z-index: -1;
+   background:
+     radial-gradient(ellipse at 30% 20%, rgba(220, 38, 38, 0.08) 0%, transparent 50%),
+     radial-gradient(ellipse at 70% 80%, rgba(245, 158, 11, 0.06) 0%, transparent 50%);
+   pointer-events: none;
  }
 
- /* ===== COMPACT PREMIUM HOME PAGE (no scroll, no flash) ===== */
+ /* — Hero: WAR banner — */
  .home-hero {
- text-align: center; margin-bottom: 20px; padding: 24px 20px;
- background: linear-gradient(135deg, rgba(28,25,23,0.6) 0%, rgba(41,37,36,0.4) 100%);
- border: 1px solid rgba(245, 158, 11, 0.15);
- border-radius: 16px;
- backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
- box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(245, 158, 11, 0.1);
- position: relative; overflow: hidden;
+   text-align: center;
+   padding: 28px 24px 24px;
+   background: linear-gradient(135deg, rgba(20, 12, 8, 0.9) 0%, rgba(28, 25, 23, 0.8) 100%);
+   border: 1px solid rgba(220, 38, 38, 0.2);
+   border-radius: 16px;
+   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(220, 38, 38, 0.15);
+   position: relative; overflow: hidden;
  }
+ /* Red battle glow line at top */
  .home-hero::before {
- content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
- background: linear-gradient(90deg, transparent, #f59e0b, transparent);
- animation: heroShine 3s ease-in-out infinite;
+   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+   background: linear-gradient(90deg, transparent 0%, #dc2626 30%, #f59e0b 50%, #dc2626 70%, transparent 100%);
+   animation: warGlow 3s ease-in-out infinite;
  }
- @keyframes heroShine {
- 0%, 100% { transform: translateX(-100%); }
- 50% { transform: translateX(100%); }
+ @keyframes warGlow {
+   0%, 100% { opacity: 0.5; }
+   50% { opacity: 1; }
  }
  .home-hero h1 {
- font-size: clamp(28px, 5vw, 42px); font-weight: 900;
- letter-spacing: -0.02em; margin-bottom: 8px;
- background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
- -webkit-background-clip: text; background-clip: text;
- -webkit-text-fill-color: transparent;
- text-shadow: 0 4px 24px rgba(245, 158, 11, 0.2);
+   font-size: clamp(26px, 5vw, 40px); font-weight: 900;
+   letter-spacing: -0.02em; margin-bottom: 6px;
+   background: linear-gradient(135deg, #fde68a 0%, #f59e0b 40%, #dc2626 100%);
+   -webkit-background-clip: text; background-clip: text;
+   -webkit-text-fill-color: transparent;
+   text-shadow: 0 0 30px rgba(220, 38, 38, 0.15);
  }
  .home-hero .hero-sub {
- font-size: clamp(12px, 1.5vw, 14px); color: #a8a29e;
- max-width: 480px; margin: 0 auto; line-height: 1.5;
+   font-size: clamp(11px, 1.5vw, 13px); color: #a8a29e;
+   max-width: 440px; margin: 0 auto; line-height: 1.5;
  }
  .home-hero .hero-tagline {
- font-size: 10px; text-transform: uppercase; letter-spacing: 0.3em;
- color: rgba(245, 158, 11, 0.8); margin-top: 12px;
- display: inline-block; padding: 3px 14px;
- border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 999px;
- background: rgba(245, 158, 11, 0.05);
+   font-size: 9px; text-transform: uppercase; letter-spacing: 0.3em;
+   color: #dc2626; margin-top: 10px;
+   display: inline-block; padding: 3px 12px;
+   border: 1px solid rgba(220, 38, 38, 0.3); border-radius: 999px;
+   background: rgba(220, 38, 38, 0.05);
  }
 
+ /* — Profile bar — compact war command strip */
  .profile-card {
- background: linear-gradient(135deg, rgba(28, 25, 23, 0.8) 0%, rgba(41, 37, 36, 0.6) 100%);
- border: 1px solid rgba(245, 158, 11, 0.15);
- border-radius: 12px;
- padding: 12px 18px;
- display: flex; align-items: center; justify-content: space-between;
- margin-bottom: 16px;
- backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
- box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
- position: relative; overflow: hidden;
+   display: flex; align-items: center; justify-content: space-between;
+   padding: 10px 16px;
+   background: linear-gradient(135deg, rgba(20, 12, 8, 0.85) 0%, rgba(28, 25, 23, 0.7) 100%);
+   border: 1px solid rgba(220, 38, 38, 0.12);
+   border-radius: 12px;
+   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
  }
- .profile-card::before {
- content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
- background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.3), transparent);
- }
- .profile-info { display: flex; align-items: center; gap: 12px; }
+ .profile-info { display: flex; align-items: center; gap: 10px; }
  .profile-avatar {
- width: 42px; height: 42px; border-radius: 50%;
- background: linear-gradient(135deg, #f59e0b, #e11d48);
- display: flex; align-items: center; justify-content: center;
- font-size: 16px; font-weight: 700; color: #fff;
- overflow: hidden;
- box-shadow: 0 2px 12px rgba(245, 158, 11, 0.3);
- border: 2px solid rgba(255, 255, 255, 0.1);
+   width: 38px; height: 38px; border-radius: 50%;
+   background: linear-gradient(135deg, #dc2626, #f59e0b);
+   display: flex; align-items: center; justify-content: center;
+   font-size: 14px; font-weight: 700; color: #fff;
+   overflow: hidden;
+   box-shadow: 0 2px 12px rgba(220, 38, 38, 0.3);
+   border: 2px solid rgba(255, 255, 255, 0.1);
  }
  .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
- .profile-name { font-weight: 700; font-size: 15px; color: #f5f5f4; }
- .profile-sub { font-size: 11px; color: #a8a29e; margin-top: 1px; }
+ .profile-name { font-weight: 700; font-size: 14px; color: #f5f5f4; }
+ .profile-sub { font-size: 10px; color: #a8a29e; margin-top: 1px; }
  .profile-stats { display: flex; gap: 14px; }
  .stat { text-align: center; }
- .stat-val { font-size: 18px; font-weight: 800; color: #f5f5f4; }
- .stat-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.1em; color: #78716c; margin-top: 1px; }
+ .stat-val { font-size: 16px; font-weight: 800; color: #f5f5f4; }
+ .stat-label { font-size: 7px; text-transform: uppercase; letter-spacing: 0.1em; color: #78716c; margin-top: 1px; }
 
+ /* — Mode cards — battle deployment cards */
  .mode-grid {
- display: grid;
- grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
- gap: 14px;
+   display: grid;
+   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+   gap: 14px;
  }
  .mode-card {
- background: linear-gradient(135deg, rgba(28, 25, 23, 0.8) 0%, rgba(41, 37, 36, 0.6) 100%);
- border: 1px solid rgba(245, 158, 11, 0.12);
- border-radius: 14px;
- padding: 18px 18px;
- cursor: pointer;
- transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
- overflow: hidden;
- position: relative;
- backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
- box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+   background: linear-gradient(135deg, rgba(20, 12, 8, 0.85) 0%, rgba(28, 25, 23, 0.7) 100%);
+   border: 1px solid rgba(168, 162, 158, 0.1);
+   border-radius: 14px;
+   padding: 20px 18px;
+   cursor: pointer;
+   transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+   overflow: hidden;
+   position: relative;
+   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
  }
  .mode-card:hover {
- border-color: rgba(245, 158, 11, 0.4);
- transform: translateY(-3px);
- box-shadow: 0 12px 28px rgba(245, 158, 11, 0.12), 0 0 0 1px rgba(245, 158, 11, 0.1);
+   border-color: rgba(220, 38, 38, 0.35);
+   transform: translateY(-3px);
+   box-shadow: 0 12px 32px rgba(220, 38, 38, 0.12), 0 0 0 1px rgba(220, 38, 38, 0.1);
  }
+ /* War stripe at top of each card */
  .mode-card::before {
- content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+   content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
  }
- .mode-card.pvc::before { background: linear-gradient(to right, #f59e0b, #b45309); }
- .mode-card.pvp::before { background: linear-gradient(to right, #10b981, #047857); }
- .mode-card.online::before { background: linear-gradient(to right, #e11d48, #7c3aed); }
+ .mode-card.pvc::before { background: linear-gradient(90deg, #f59e0b, #b45309); }
+ .mode-card.online::before { background: linear-gradient(90deg, #dc2626, #7c3aed); }
+ /* Battle glow on hover */
  .mode-card::after {
- content: ""; position: absolute; inset: 0;
- background: radial-gradient(circle at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
- opacity: 0; transition: opacity 0.3s; pointer-events: none;
+   content: ""; position: absolute; inset: 0;
+   background: radial-gradient(circle at 50% 0%, rgba(220, 38, 38, 0.06) 0%, transparent 60%);
+   opacity: 0; transition: opacity 0.3s; pointer-events: none;
  }
  .mode-card:hover::after { opacity: 1; }
  .mode-icon {
- width: 44px; height: 44px; border-radius: 12px;
- display: flex; align-items: center; justify-content: center;
- font-size: 15px; font-weight: 800; color: #fff; letter-spacing: 0.02em;
- margin-bottom: 10px;
- box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+   width: 42px; height: 42px; border-radius: 10px;
+   display: flex; align-items: center; justify-content: center;
+   color: #fff; margin-bottom: 10px;
+   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
  }
  .mode-card.pvc .mode-icon { background: linear-gradient(135deg, #f59e0b, #b45309); }
- .mode-card.pvp .mode-icon { background: linear-gradient(135deg, #10b981, #047857); }
- .mode-card.online .mode-icon { background: linear-gradient(135deg, #e11d48, #7c3aed); }
- .mode-title { font-size: 17px; font-weight: 800; margin-bottom: 4px; color: #f5f5f4; }
- .mode-sub { font-size: 12px; color: #a8a29e; margin-bottom: 12px; }
- .mode-features { font-size: 11px; color: #d6d3d1; line-height: 1.7; }
- .mode-badge {
- position: absolute; top: 12px; right: 12px;
- background: #e11d48; color: #fff;
- font-size: 9px; font-weight: 700;
- padding: 3px 8px; border-radius: 999px;
- box-shadow: 0 2px 8px rgba(225, 29, 72, 0.4);
- }
+ .mode-card.online .mode-icon { background: linear-gradient(135deg, #dc2626, #7c3aed); }
+ .mode-title { font-size: 16px; font-weight: 800; margin-bottom: 3px; color: #f5f5f4; }
+ .mode-sub { font-size: 11px; color: #a8a29e; margin-bottom: 10px; }
+ .mode-features { font-size: 10px; color: #d6d3d1; line-height: 1.7; }
  .btn-start {
- width: 100%; margin-top: 12px;
- padding: 9px;
- border: none; border-radius: 8px;
- font-size: 13px; font-weight: 700;
- cursor: pointer; color: #fff;
- transition: all 0.2s;
- box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+   width: 100%; margin-top: 12px;
+   padding: 9px;
+   border: none; border-radius: 8px;
+   font-size: 12px; font-weight: 700;
+   cursor: pointer; color: #fff;
+   transition: all 0.2s;
+   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+   text-transform: uppercase; letter-spacing: 0.05em;
  }
- .btn-start:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
- .mode-card.pvc .btn-start { background: linear-gradient(to right, #f59e0b, #b45309); }
- .mode-card.pvp .btn-start { background: linear-gradient(to right, #10b981, #047857); }
- .mode-card.online .btn-start { background: linear-gradient(to right, #e11d48, #7c3aed); }
+ .btn-start:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+ .mode-card.pvc .btn-start { background: linear-gradient(135deg, #f59e0b, #b45309); }
+ .mode-card.online .btn-start { background: linear-gradient(135deg, #dc2626, #7c3aed); }
 
  /* ===== WIN / LOSE VIBE ANIMATIONS ===== */
  /* Full-screen overlay that plays when a game ends */
@@ -1947,8 +1935,8 @@
  <div id="home">
  <div class="home-hero">
  <h1>GRANDMASTER'S ARENA</h1>
- <p class="hero-sub">Play chess online with friends or challenge the AI. Real-time multiplayer, beautiful boards, professional sounds.</p>
- <div class="hero-tagline">Chess · Engine · Analysis</div>
+ <p class="hero-sub">Choose your battlefield. Challenge the AI or wage war online. Every move counts.</p>
+ <div class="hero-tagline">Chess · War · Conquest</div>
  </div>
 
  <div class="profile-card" id="profile-card"></div>
@@ -2283,17 +2271,17 @@
  }, 3200);
  })();
 
- // ===== BACKGROUND MUSIC (BGM) — Free Fire 2018 battle royale vibe =====
- // Tense, atmospheric, electronic battle music with:
- //   - Deep pulsing sub-bass (the iconic FF heartbeat)
- //   - Electronic tension synth (high atmospheric pad)
- //   - Trap-style hi-hats (fast rolls)
- //   - Deep 808 bass hits (the drop)
- //   - Rising tension riser (pre-drop build)
- //   - Minor key melody (dark, dramatic)
- // Controlled by the existing sound button (on/off). Default: ON.
+ // ===== BACKGROUND MUSIC (BGM) — CHESS WAR BATTLE vibe =====
+ // Epic orchestral + electronic hybrid battle music:
+ //   - Orchestral string section (tremolo strings + sustained cello)
+ //   - War timpani drums (deep, resonant booms)
+ //   - Brass section (French horn fanfares)
+ //   - Electronic sub-bass (modern tension under orchestra)
+ //   - Snare drum rolls (military march)
+ //   - Dramatic build → climax → resolution structure
+ // Key: D minor (the classic war key). Controlled by sound button.
  const ChessBGM = {
-   ctx: null, master: null, bassBus: null, melBus: null, hatBus: null, fxBus: null,
+   ctx: null, master: null, strBus: null, drumBus: null, brassBus: null, subBus: null,
    playing: false, enabled: true, stepTimer: null, step: 0,
 
    init() {
@@ -2303,192 +2291,246 @@
        this.ctx = new Ctx();
        this.master = this.ctx.createGain();
        this.master.gain.value = 0;
-       // Reverb-like delay for atmospheric spaciousness
-       const delay = this.ctx.createDelay(1);
-       delay.delayTime.value = 0.375; // dotted eighth
+       // Large hall reverb via feedback delay
+       const delay = this.ctx.createDelay(2);
+       delay.delayTime.value = 0.6;
        const delayFb = this.ctx.createGain();
-       delayFb.gain.value = 0.4;
+       delayFb.gain.value = 0.45;
        const delayWet = this.ctx.createGain();
-       delayWet.gain.value = 0.3;
+       delayWet.gain.value = 0.35;
        this.master.connect(this.ctx.destination);
        this.master.connect(delay);
        delay.connect(delayFb); delayFb.connect(delay);
        delay.connect(delayWet); delayWet.connect(this.ctx.destination);
-       // Sub-buses
-       this.bassBus = this.ctx.createGain(); this.bassBus.gain.value = 0.8;
-       this.melBus = this.ctx.createGain(); this.melBus.gain.value = 0.3;
-       this.hatBus = this.ctx.createGain(); this.hatBus.gain.value = 0.15;
-       this.fxBus = this.ctx.createGain(); this.fxBus.gain.value = 0.25;
-       // Bass — lowpass for sub frequencies
-       const bassLP = this.ctx.createBiquadFilter();
-       bassLP.type = 'lowpass'; bassLP.frequency.value = 250; bassLP.Q.value = 1;
-       this.bassBus.connect(bassLP); bassLP.connect(this.master);
-       // Melody — bandpass for electronic synth tone
-       const melBP = this.ctx.createBiquadFilter();
-       melBP.type = 'bandpass'; melBP.frequency.value = 1200; melBP.Q.value = 2;
-       this.melBus.connect(melBP); melBP.connect(this.master);
-       // Hats — highpass for crispness
-       const hatHP = this.ctx.createBiquadFilter();
-       hatHP.type = 'highpass'; hatHP.frequency.value = 7000;
-       this.hatBus.connect(hatHP); hatHP.connect(this.master);
-       // FX — no filter (wide spectrum)
-       this.fxBus.connect(this.master);
+       // Sub-buses with character filters
+       this.strBus = this.ctx.createGain(); this.strBus.gain.value = 0.35;
+       this.drumBus = this.ctx.createGain(); this.drumBus.gain.value = 0.6;
+       this.brassBus = this.ctx.createGain(); this.brassBus.gain.value = 0.25;
+       this.subBus = this.ctx.createGain(); this.subBus.gain.value = 0.5;
+       // Strings — lowpass for warm orchestral tone
+       const strLP = this.ctx.createBiquadFilter();
+       strLP.type = 'lowpass'; strLP.frequency.value = 2000; strLP.Q.value = 0.5;
+       this.strBus.connect(strLP); strLP.connect(this.master);
+       // Drums — no filter (raw impact)
+       this.drumBus.connect(this.master);
+       // Brass — bandpass for horn-like tone
+       const brassBP = this.ctx.createBiquadFilter();
+       brassBP.type = 'bandpass'; brassBP.frequency.value = 600; brassBP.Q.value = 1.2;
+       this.brassBus.connect(brassBP); brassBP.connect(this.master);
+       // Sub-bass — lowpass for sub frequencies
+       const subLP = this.ctx.createBiquadFilter();
+       subLP.type = 'lowpass'; subLP.frequency.value = 150; subLP.Q.value = 1;
+       this.subBus.connect(subLP); subLP.connect(this.master);
      } catch (e) { console.warn('BGM init failed', e); }
    },
 
-   // 808 bass hit — deep sine with pitch drop
-   play808(freq, time, dur, gain) {
+   // Timpani — deep resonant drum (sine + noise + resonance)
+   playTimpani(time, gain, pitch) {
      if (!this.ctx) return;
+     pitch = pitch || 110; // A2 default
+     // Body — sine with pitch drop
      const osc = this.ctx.createOscillator();
      osc.type = 'sine';
-     osc.frequency.setValueAtTime(freq * 2, time);
-     osc.frequency.exponentialRampToValueAtTime(freq, time + 0.05);
-     const g = this.ctx.createGain();
-     g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + 0.01);
-     g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-     osc.connect(g); g.connect(this.bassBus);
-     osc.start(time); osc.stop(time + dur + 0.1);
-   },
-
-   // Sub-bass pulse — the heartbeat
-   playSubPulse(time, gain) {
-     if (!this.ctx) return;
-     const osc = this.ctx.createOscillator();
-     osc.type = 'sine';
-     osc.frequency.setValueAtTime(55, time); // A1
-     const g = this.ctx.createGain();
-     g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + 0.02);
-     g.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-     osc.connect(g); g.connect(this.bassBus);
-     osc.start(time); osc.stop(time + 0.4);
-   },
-
-   // Hi-hat — noise burst
-   playHat(time, gain) {
-     if (!this.ctx) return;
-     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.03, this.ctx.sampleRate);
+     osc.frequency.setValueAtTime(pitch * 1.5, time);
+     osc.frequency.exponentialRampToValueAtTime(pitch, time + 0.08);
+     const og = this.ctx.createGain();
+     og.gain.setValueAtTime(gain, time);
+     og.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
+     osc.connect(og); og.connect(this.drumBus);
+     osc.start(time); osc.stop(time + 0.7);
+     // Resonance — second harmonic
+     const osc2 = this.ctx.createOscillator();
+     osc2.type = 'sine';
+     osc2.frequency.value = pitch * 2;
+     const og2 = this.ctx.createGain();
+     og2.gain.setValueAtTime(gain * 0.3, time);
+     og2.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
+     osc2.connect(og2); og2.connect(this.drumBus);
+     osc2.start(time); osc2.stop(time + 0.4);
+     // Impact noise
+     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
      const data = buf.getChannelData(0);
      for (let i = 0; i < data.length; i++) {
        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
      }
      const noise = this.ctx.createBufferSource();
      noise.buffer = buf;
-     const g = this.ctx.createGain();
-     g.gain.setValueAtTime(gain, time);
-     g.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
-     noise.connect(g); g.connect(this.hatBus);
-     noise.start(time); noise.stop(time + 0.05);
+     const nf = this.ctx.createBiquadFilter();
+     nf.type = 'lowpass'; nf.frequency.value = 300;
+     const ng = this.ctx.createGain();
+     ng.gain.setValueAtTime(gain * 0.3, time);
+     ng.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+     noise.connect(nf); nf.connect(ng); ng.connect(this.drumBus);
+     noise.start(time); noise.stop(time + 0.06);
    },
 
-   // Electronic synth note — sawtooth with filter sweep
-   playSynth(freq, time, dur, gain) {
+   // Snare roll — military marching snare
+   playSnare(time, gain) {
+     if (!this.ctx) return;
+     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.06, this.ctx.sampleRate);
+     const data = buf.getChannelData(0);
+     for (let i = 0; i < data.length; i++) {
+       data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
+     }
+     const noise = this.ctx.createBufferSource();
+     noise.buffer = buf;
+     const nf = this.ctx.createBiquadFilter();
+     nf.type = 'highpass'; nf.frequency.value = 1500;
+     const g = this.ctx.createGain();
+     g.gain.setValueAtTime(gain, time);
+     g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+     noise.connect(nf); nf.connect(g); g.connect(this.drumBus);
+     noise.start(time); noise.stop(time + 0.08);
+   },
+
+   // String note — sawtooth with slow attack (orchestral string section)
+   playString(freq, time, dur, gain) {
+     if (!this.ctx) return;
+     // Two detuned oscillators for richness (ensemble effect)
+     [0, 7].forEach(detune => {
+       const osc = this.ctx.createOscillator();
+       osc.type = 'sawtooth';
+       osc.frequency.value = freq;
+       osc.detune.value = detune;
+       const g = this.ctx.createGain();
+       g.gain.setValueAtTime(0, time);
+       g.gain.linearRampToValueAtTime(gain, time + 0.4); // slow attack = string bow
+       g.gain.linearRampToValueAtTime(gain * 0.7, time + dur * 0.6);
+       g.gain.linearRampToValueAtTime(0, time + dur);
+       osc.connect(g); g.connect(this.strBus);
+       osc.start(time); osc.stop(time + dur + 0.1);
+     });
+   },
+
+   // Tremolo string — rapid amplitude modulation (tension effect)
+   playTremolo(freq, time, dur, gain) {
      if (!this.ctx) return;
      const osc = this.ctx.createOscillator();
      osc.type = 'sawtooth';
      osc.frequency.value = freq;
      const g = this.ctx.createGain();
-     g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + 0.03);
-     g.gain.linearRampToValueAtTime(gain * 0.6, time + dur * 0.5);
+     g.gain.value = 0;
+     // Tremolo via LFO
+     const lfo = this.ctx.createOscillator();
+     lfo.frequency.value = 8; // 8Hz tremolo
+     const lfoGain = this.ctx.createGain();
+     lfoGain.gain.value = gain * 0.5;
+     lfo.connect(lfoGain); lfoGain.connect(g.gain);
+     g.gain.setValueAtTime(gain * 0.5, time);
      g.gain.linearRampToValueAtTime(0, time + dur);
-     osc.connect(g); g.connect(this.melBus);
+     osc.connect(g); g.connect(this.strBus);
+     osc.start(time); osc.stop(time + dur + 0.1);
+     lfo.start(time); lfo.stop(time + dur + 0.1);
+   },
+
+   // Brass — French horn (sawtooth + slow attack + vibrato)
+   playBrass(freq, time, dur, gain) {
+     if (!this.ctx) return;
+     const osc = this.ctx.createOscillator();
+     osc.type = 'sawtooth';
+     osc.frequency.value = freq;
+     // Vibrato
+     const lfo = this.ctx.createOscillator();
+     lfo.frequency.value = 4.5;
+     const lfoGain = this.ctx.createGain();
+     lfoGain.gain.value = 2;
+     lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
+     const g = this.ctx.createGain();
+     g.gain.setValueAtTime(0, time);
+     g.gain.linearRampToValueAtTime(gain, time + 0.15); // brass attack
+     g.gain.linearRampToValueAtTime(gain * 0.85, time + dur * 0.6);
+     g.gain.linearRampToValueAtTime(0, time + dur);
+     osc.connect(g); g.connect(this.brassBus);
+     osc.start(time); osc.stop(time + dur + 0.1);
+     lfo.start(time); lfo.stop(time + dur + 0.1);
+   },
+
+   // Sub-bass — electronic drone under orchestra
+   playSub(freq, time, dur, gain) {
+     if (!this.ctx) return;
+     const osc = this.ctx.createOscillator();
+     osc.type = 'sine';
+     osc.frequency.value = freq;
+     const g = this.ctx.createGain();
+     g.gain.setValueAtTime(0, time);
+     g.gain.linearRampToValueAtTime(gain, time + 0.2);
+     g.gain.linearRampToValueAtTime(gain * 0.8, time + dur * 0.7);
+     g.gain.linearRampToValueAtTime(0, time + dur);
+     osc.connect(g); g.connect(this.subBus);
      osc.start(time); osc.stop(time + dur + 0.1);
    },
 
-   // Riser — white noise sweep upward (pre-drop tension)
-   playRiser(time, dur, gain) {
-     if (!this.ctx) return;
-     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
-     const data = buf.getChannelData(0);
-     for (let i = 0; i < data.length; i++) {
-       data[i] = (Math.random() * 2 - 1) * (i / data.length); // rising amplitude
-     }
-     const noise = this.ctx.createBufferSource();
-     noise.buffer = buf;
-     const filter = this.ctx.createBiquadFilter();
-     filter.type = 'bandpass';
-     filter.Q.value = 2;
-     filter.frequency.setValueAtTime(400, time);
-     filter.frequency.exponentialRampToValueAtTime(6000, time + dur);
-     const g = this.ctx.createGain();
-     g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + dur * 0.7);
-     g.gain.linearRampToValueAtTime(0, time + dur);
-     noise.connect(filter); filter.connect(g); g.connect(this.fxBus);
-     noise.start(time); noise.stop(time + dur + 0.1);
-   },
-
-   // Impact hit — the drop
-   playImpact(time, gain) {
-     if (!this.ctx) return;
-     // Sub boom
-     const osc = this.ctx.createOscillator();
-     osc.type = 'sine';
-     osc.frequency.setValueAtTime(80, time);
-     osc.frequency.exponentialRampToValueAtTime(30, time + 0.5);
-     const og = this.ctx.createGain();
-     og.gain.setValueAtTime(gain, time);
-     og.gain.exponentialRampToValueAtTime(0.001, time + 0.8);
-     osc.connect(og); og.connect(this.fxBus);
-     osc.start(time); osc.stop(time + 1);
-     // Noise crash
-     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.3, this.ctx.sampleRate);
-     const data = buf.getChannelData(0);
-     for (let i = 0; i < data.length; i++) {
-       data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 0.5);
-     }
-     const noise = this.ctx.createBufferSource();
-     noise.buffer = buf;
-     const nf = this.ctx.createBiquadFilter();
-     nf.type = 'lowpass'; nf.frequency.value = 3000;
-     const ng = this.ctx.createGain();
-     ng.gain.setValueAtTime(gain * 0.5, time);
-     ng.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-     noise.connect(nf); nf.connect(ng); ng.connect(this.fxBus);
-     noise.start(time); noise.stop(time + 0.4);
-   },
-
-   // 32-step loop (16 seconds). Key: A minor (dark battle key).
-   // Structure: Build (0-7) → Drop (8-15) → Build (16-23) → Drop (24-31)
-   // Melody notes (A minor): A4 C5 D5 E5 G5 — the classic FF tense melody
-   melody: [440, 523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25],
+   // 32-step loop (16 seconds). Key: D minor.
+   // Structure: Intro (0-7) → Build (8-15) → Climax (16-23) → Resolution (24-31)
+   // D minor scale: D E F G A Bb C
+   // Chord progression: Dm → Bb → F → C (i → VI → III → VII — epic war progression)
+   chords: [
+     { root: 73.42, notes: [73.42, 110, 146.83], name: 'Dm' },     // D2, A2, D3
+     { root: 58.27, notes: [58.27, 87.31, 116.54], name: 'Bb' },  // Bb1, F2, Bb2
+     { root: 87.31, notes: [87.31, 130.81, 174.61], name: 'F' },   // F2, C3, F3
+     { root: 65.41, notes: [65.41, 98, 130.81], name: 'C' },       // C2, G2, C3
+   ],
+   // Melody (D minor) — epic war theme
+   melody: [293.66, 349.23, 440, 349.23, 293.66, 261.63, 293.66, 349.23],
 
    playStep() {
      if (!this.ctx || !this.enabled) return;
      const now = this.ctx.currentTime;
      const s = this.step;
-     const inDrop = (s >= 8 && s < 16) || (s >= 24 && s < 32);
-     // Sub-bass pulse — heartbeat on every odd step
-     if (s % 2 === 0) this.playSubPulse(now, inDrop ? 0.25 : 0.15);
-     // 808 bass hits — on beats 0, 4, 8, 12... (every 2 seconds)
-     if (s % 4 === 0) {
-       const bassNotes = [55, 55, 65.41, 49]; // A1, A1, C2, G1
-       this.play808(bassNotes[Math.floor(s / 4) % 4], now, 1.5, inDrop ? 0.4 : 0.2);
+     const phase = Math.floor(s / 8); // 0=intro, 1=build, 2=climax, 3=resolution
+     const chordIdx = Math.floor(s / 8) % 4;
+     const chord = this.chords[chordIdx];
+     // Timpani — war march on every 2 steps (quarter notes)
+     if (s % 2 === 0) {
+       const drumGain = phase >= 2 ? 0.5 : (phase >= 1 ? 0.35 : 0.2);
+       this.playTimpani(now, drumGain, chord.root);
      }
-     // Hi-hats — fast trap rolls during drop, sparse during build
-     if (inDrop) {
-       // Double-time hats
-       this.playHat(now, 0.08);
-       if (s % 2 === 1) this.playHat(now + 0.125, 0.06);
-       if (s % 4 === 3) this.playHat(now + 0.25, 0.05);
-     } else {
-       // Sparse hats
-       if (s % 2 === 1) this.playHat(now, 0.06);
+     // Snare — on offbeats during build and climax
+     if (phase >= 1 && s % 2 === 1) {
+       this.playSnare(now, phase >= 2 ? 0.12 : 0.08);
      }
-     // Melody — plays during build, pauses during drop (tension/release)
-     if (!inDrop && s % 2 === 0) {
-       const melIdx = Math.floor(s / 2) % 8;
-       this.playSynth(this.melody[melIdx], now, 0.8, 0.06);
+     // Snare roll — before climax (step 14) and before resolution (step 30)
+     if (s === 14 || s === 30) {
+       for (let i = 0; i < 4; i++) {
+         this.playSnare(now + i * 0.06, 0.1);
+       }
      }
-     // Riser — 2 steps before each drop (steps 6 and 22)
-     if (s === 6 || s === 22) {
-       this.playRiser(now, 1, 0.15);
+     // Strings — sustained chord at start of each phase (every 8 steps)
+     if (s % 8 === 0) {
+       chord.notes.forEach(freq => {
+         this.playString(freq, now, 4.5, phase >= 2 ? 0.05 : 0.035);
+       });
      }
-     // Impact drop — at start of each drop section (steps 8 and 24)
-     if (s === 8 || s === 24) {
-       this.playImpact(now, 0.3);
+     // Tremolo strings — during build and climax (tension)
+     if (phase >= 1 && phase <= 2 && s % 4 === 2) {
+       this.playTremolo(chord.notes[2] * 2, now, 1.5, 0.025);
+     }
+     // Brass fanfare — at start of build (step 8) and climax (step 16)
+     if (s === 8) {
+       // Rising fanfare: D4 → F4 → A4
+       this.playBrass(293.66, now, 1, 0.07);
+       this.playBrass(349.23, now + 0.5, 1, 0.06);
+       this.playBrass(440, now + 1, 1.5, 0.08);
+     }
+     if (s === 16) {
+       // Epic fanfare: A4 → D5 (the war cry)
+       this.playBrass(440, now, 1, 0.09);
+       this.playBrass(587.33, now + 0.5, 2, 0.1);
+     }
+     if (s === 24) {
+       // Resolution fanfare: D4 → A4 → D5 (victory)
+       this.playBrass(293.66, now, 0.8, 0.07);
+       this.playBrass(440, now + 0.4, 0.8, 0.07);
+       this.playBrass(587.33, now + 0.8, 2, 0.09);
+     }
+     // Melody — plays during intro and resolution (contemplative phases)
+     if ((phase === 0 || phase === 3) && s % 2 === 0) {
+       const melIdx = (s / 2) % 8;
+       this.playString(this.melody[melIdx] * 2, now, 0.9, 0.025);
+     }
+     // Sub-bass drone — continuous under everything
+     if (s % 8 === 0) {
+       this.playSub(chord.root / 2, now, 4.5, 0.08);
      }
      this.step = (this.step + 1) % 32;
    },
@@ -2502,9 +2544,9 @@
      this.step = 0;
      this.master.gain.cancelScheduledValues(this.ctx.currentTime);
      this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.7 : 0, this.ctx.currentTime + 2);
+     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.7 : 0, this.ctx.currentTime + 3);
      this.playStep();
-     this.stepTimer = setInterval(() => this.playStep(), 250); // 250ms = 240bpm eighth notes
+     this.stepTimer = setInterval(() => this.playStep(), 500); // 500ms = 120bpm quarter notes
    },
 
    stop() {
@@ -2513,7 +2555,7 @@
      if (this.master && this.ctx) {
        this.master.gain.cancelScheduledValues(this.ctx.currentTime);
        this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-       this.master.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1);
+       this.master.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1.5);
      }
    },
 
