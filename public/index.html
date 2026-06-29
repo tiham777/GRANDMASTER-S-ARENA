@@ -103,8 +103,9 @@
           return this.enabled;
         },
         isSoundEnabled() { return this.enabled; },
-        // PREMIUM CHESS SOUNDS — woody "tock" simulation
-        // Layered: noise burst (impact) + sine body (resonance) + lowpass filter (warmth)
+        // PREMIUM CHESS SOUNDS — warm, professional "tock" simulation
+        // Layered: soft noise burst (impact) + sine body (resonance) + lowpass filter (warmth)
+        // Tuned to sound like a fine staunton piece on a walnut board — not harsh or digital.
         _playTock(opts) {
           // opts: { freq, decay, noiseDecay, gain, filterFreq, filterQ }
           if (!this.enabled) return;
@@ -120,10 +121,10 @@
             const filterFreq = opts.filterFreq || 1200;
             const filterQ = opts.filterQ || 2;
 
-            // Master gain + lowpass for woody warmth
+            // Master gain + lowpass for woody warmth (gentler rolloff for a softer sound)
             const master = ctx.createGain();
             master.gain.setValueAtTime(gain, t);
-            master.gain.exponentialRampToValueAtTime(0.001, t + decay);
+            master.gain.exponentialRampToValueAtTime(0.0001, t + decay);
             const lp = ctx.createBiquadFilter();
             lp.type = 'lowpass';
             lp.frequency.setValueAtTime(filterFreq, t);
@@ -131,41 +132,43 @@
             lp.connect(master);
             master.connect(ctx.destination);
 
-            // Layer 1: Filtered noise burst — the "knock" impact
+            // Layer 1: Filtered noise burst — the soft "knock" impact
+            // Softer than before: gentler envelope (cubic), lower noise gain
             const noiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * noiseDecay), ctx.sampleRate);
             const noiseData = noiseBuf.getChannelData(0);
             for (let i = 0; i < noiseData.length; i++) {
-              noiseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / noiseData.length, 2);
+              noiseData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / noiseData.length, 3);
             }
             const noise = ctx.createBufferSource();
             noise.buffer = noiseBuf;
             const noiseGain = ctx.createGain();
-            noiseGain.gain.setValueAtTime(0.6, t);
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + noiseDecay);
+            noiseGain.gain.setValueAtTime(0.4, t);
+            noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + noiseDecay);
             const noiseFilter = ctx.createBiquadFilter();
             noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.setValueAtTime(freq * 2, t);
-            noiseFilter.Q.setValueAtTime(1.5, t);
+            noiseFilter.frequency.setValueAtTime(freq * 1.8, t);
+            noiseFilter.Q.setValueAtTime(1.2, t);
             noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(lp);
 
             // Layer 2: Sine body — the woody resonance (pitch drops on impact)
+            // Softer: lower starting gain, gentler pitch drop
             const osc = ctx.createOscillator();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq * 1.5, t);
-            osc.frequency.exponentialRampToValueAtTime(freq, t + 0.015);
+            osc.frequency.setValueAtTime(freq * 1.3, t);
+            osc.frequency.exponentialRampToValueAtTime(freq, t + 0.02);
             const oscGain = ctx.createGain();
-            oscGain.gain.setValueAtTime(0.8, t);
-            oscGain.gain.exponentialRampToValueAtTime(0.001, t + decay);
+            oscGain.gain.setValueAtTime(0.6, t);
+            oscGain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
             osc.connect(oscGain); oscGain.connect(lp);
 
-            // Layer 3: Triangle sub — adds depth/thump
+            // Layer 3: Triangle sub — adds depth/thump (softer)
             const sub = ctx.createOscillator();
             sub.type = 'triangle';
             sub.frequency.setValueAtTime(freq * 0.5, t);
-            sub.frequency.exponentialRampToValueAtTime(freq * 0.4, t + 0.02);
+            sub.frequency.exponentialRampToValueAtTime(freq * 0.4, t + 0.025);
             const subGain = ctx.createGain();
-            subGain.gain.setValueAtTime(0.4, t);
-            subGain.gain.exponentialRampToValueAtTime(0.001, t + decay * 1.5);
+            subGain.gain.setValueAtTime(0.3, t);
+            subGain.gain.exponentialRampToValueAtTime(0.0001, t + decay * 1.5);
             sub.connect(subGain); subGain.connect(lp);
 
             noise.start(t); noise.stop(t + noiseDecay);
@@ -174,12 +177,14 @@
           } catch (e) { console.warn('Audio play failed', e); }
         },
         playMove() {
-          // Woody "tock" — medium pitch, short decay. Like a staunton piece on walnut.
-          this._playTock({ freq: 240, decay: 0.09, noiseDecay: 0.035, gain: 0.35, filterFreq: 1400, filterQ: 2.5 });
+          // Warm "tock" — medium pitch, short decay. Like a staunton piece on walnut.
+          // Softer than before: lower gain, warmer filter.
+          this._playTock({ freq: 220, decay: 0.10, noiseDecay: 0.04, gain: 0.28, filterFreq: 1200, filterQ: 2 });
         },
         playCapture() {
           // Heavier "thud" + scrape — lower pitch, longer decay, more noise.
-          this._playTock({ freq: 160, decay: 0.14, noiseDecay: 0.06, gain: 0.45, filterFreq: 900, filterQ: 2 });
+          // Softer: reduced gain for a more refined capture sound.
+          this._playTock({ freq: 150, decay: 0.16, noiseDecay: 0.07, gain: 0.36, filterFreq: 800, filterQ: 1.8 });
           // Add a secondary scrape sound (filtered noise, lower band) after 20ms
           try {
             if (!this.enabled || !this.ctx) return;
@@ -201,45 +206,62 @@
           } catch (e) {}
         },
         playCheck() {
-          // Alert "knock-knock" — two quick tocks, slightly rising pitch
-          this._playTock({ freq: 330, decay: 0.06, noiseDecay: 0.025, gain: 0.3, filterFreq: 1800, filterQ: 3 });
+          // Soft alert "knock-knock" — two quick tocks, slightly rising pitch.
+          // Softer than before: lower gain, warmer filter.
+          this._playTock({ freq: 300, decay: 0.07, noiseDecay: 0.03, gain: 0.24, filterFreq: 1500, filterQ: 2.5 });
           setTimeout(() => {
-            this._playTock({ freq: 440, decay: 0.07, noiseDecay: 0.03, gain: 0.28, filterFreq: 2000, filterQ: 3 });
-          }, 90);
+            this._playTock({ freq: 400, decay: 0.08, noiseDecay: 0.035, gain: 0.22, filterFreq: 1700, filterQ: 2.5 });
+          }, 100);
         },
         playVictory() {
+          // Soft ascending arpeggio (C major) — warm sine waves, not harsh.
           if (!this.enabled) return;
           try {
             this.initContext();
             if (!this.ctx) return;
+            const ctx = this.ctx;
+            // Add a lowpass filter for warmth
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.setValueAtTime(2000, ctx.currentTime);
+            lp.Q.setValueAtTime(1, ctx.currentTime);
+            lp.connect(ctx.destination);
             [261.63, 329.63, 392, 523.25].forEach((freq, i) => {
-              const r = this.ctx.createOscillator(), g = this.ctx.createGain();
+              const r = ctx.createOscillator(), g = ctx.createGain();
               r.type = 'sine';
-              r.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
-              g.gain.setValueAtTime(0, this.ctx.currentTime);
-              g.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + i * 0.1 + 0.05);
-              g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.1 + 0.8);
-              r.connect(g); g.connect(this.ctx.destination);
-              r.start(this.ctx.currentTime + i * 0.1);
-              r.stop(this.ctx.currentTime + i * 0.1 + 0.9);
+              r.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+              g.gain.setValueAtTime(0, ctx.currentTime);
+              g.gain.linearRampToValueAtTime(0.07, ctx.currentTime + i * 0.12 + 0.06);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.9);
+              r.connect(g); g.connect(lp);
+              r.start(ctx.currentTime + i * 0.12);
+              r.stop(ctx.currentTime + i * 0.12 + 1);
             });
           } catch (e) { console.warn('Audio play failed', e); }
         },
         playDefeat() {
+          // Soft descending arpeggio — warm triangle waves, not harsh.
           if (!this.enabled) return;
           try {
             this.initContext();
             if (!this.ctx) return;
+            const ctx = this.ctx;
+            // Add a lowpass filter for warmth
+            const lp = ctx.createBiquadFilter();
+            lp.type = 'lowpass';
+            lp.frequency.setValueAtTime(1200, ctx.currentTime);
+            lp.Q.setValueAtTime(1, ctx.currentTime);
+            lp.connect(ctx.destination);
             [311.13, 293.66, 261.63, 196].forEach((freq, i) => {
-              const r = this.ctx.createOscillator(), g = this.ctx.createGain();
+              const r = ctx.createOscillator(), g = ctx.createGain();
               r.type = 'triangle';
-              r.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.12);
-              g.gain.setValueAtTime(0, this.ctx.currentTime);
-              g.gain.linearRampToValueAtTime(0.1, this.ctx.currentTime + i * 0.12 + 0.06);
-              g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.12 + 0.9);
-              r.connect(g); g.connect(this.ctx.destination);
-              r.start(this.ctx.currentTime + i * 0.12);
-              r.stop(this.ctx.currentTime + i * 0.12 + 1);
+              r.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.14);
+              g.gain.setValueAtTime(0, ctx.currentTime);
+              g.gain.linearRampToValueAtTime(0.07, ctx.currentTime + i * 0.14 + 0.07);
+              g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.14 + 0.9);
+              r.connect(g); g.connect(lp);
+              r.start(ctx.currentTime + i * 0.14);
+              r.stop(ctx.currentTime + i * 0.14 + 1);
             });
           } catch (e) { console.warn('Audio play failed', e); }
         },
@@ -547,15 +569,17 @@
       .btn-claim:hover { opacity: 0.9; }
       .btn-claim:disabled { opacity: 0.5; cursor: not-allowed; }
 
-      /* ===== TOP BAR ===== */
+      /* ===== TOP BAR — matches offline chess-game.html header ===== */
       #topbar {
         position: sticky; top: 0; z-index: 50;
-        background: rgba(12, 10, 9, 0.85);
-        backdrop-filter: blur(8px);
-        border-bottom: 1px solid #292524;
+        background: rgba(12, 10, 9, 0.88);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.12);
         padding: 0 16px;
         height: 56px;
         display: flex; align-items: center; justify-content: space-between;
+        box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.3);
       }
       .topbar-left { display: flex; align-items: center; gap: 8px; }
       .topbar-logo {
@@ -610,11 +634,14 @@
       }
       .profile-card {
         background: rgba(28, 25, 23, 0.6);
-        border: 1px solid #292524;
+        border: 1px solid rgba(245, 158, 11, 0.15);
         border-radius: 12px;
         padding: 16px;
         display: flex; align-items: center; justify-content: space-between;
         margin-bottom: 24px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
       }
       .profile-info { display: flex; align-items: center; gap: 12px; }
       .profile-avatar {
@@ -639,15 +666,18 @@
       }
       .mode-card {
         background: rgba(28, 25, 23, 0.6);
-        border: 1px solid #292524;
+        border: 1px solid rgba(245, 158, 11, 0.12);
         border-radius: 12px;
         padding: 20px;
         cursor: pointer;
-        transition: border-color 0.2s, transform 0.2s;
+        transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
         overflow: hidden;
         position: relative;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
       }
-      .mode-card:hover { border-color: #44403c; transform: translateY(-2px); }
+      .mode-card:hover { border-color: rgba(245, 158, 11, 0.4); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1); }
       .mode-card::before {
         content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
       }
@@ -851,17 +881,17 @@
       .outgoing-timer { font-size: 11px; color: #a8a29e; }
 
       /* ===== ONLINE GAME ROOM ===== */
-      /* ===== Online game container ===== */
+      /* ===== Online game container — matches offline page's amber glow ===== */
       #online-game {
         max-width: 1100px; margin: 0 auto;
-        padding: 12px 20px 24px;  /* reduced top padding from 24px → 12px to tighten the gap between topbar and board */
-        background: radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%);
+        padding: 12px 20px 24px;
+        background: radial-gradient(ellipse at 50% 45%, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0) 60%), radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%);
         min-height: calc(100vh - 56px);
         position: relative;
       }
       #online-game::before {
         content: ""; position: absolute; inset: 0;
-        background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+        background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 50%);
         pointer-events: none;
       }
       #online-game > * { position: relative; z-index: 1; }
@@ -949,26 +979,28 @@
         /* CARBON COPY of offline chess.html board border:
            - 8px solid (color matches the theme's lightBorder — see below)
            - 16px border-radius (rounded-2xl)
-           - shadow-2xl (0 25px 50px -12px rgba(0,0,0,0.25)) */
+           - shadow-2xl (0 25px 50px -12px rgba(0,0,0,0.25))
+           NOTE: The border-color is set per-theme below (data-board-theme).
+           In BOTH dark and light mode, the border matches the theme's light
+           square color — same as the offline chess-game.html lightBorder. */
         border-radius: 16px;
         overflow: hidden;
-        border: 8px solid #1c1917;
+        border: 8px solid #f0d9b5;
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         background: #1c1917;
         transition: border-color 0.3s;
       }
-      /* OFFLINE-PARITY: Board border color matches the theme's lightBorder.
-         In the offline chess-game.html, each theme has a `lightBorder` property
-         that makes the board border match the light square color. We replicate
-         that here so the border blends with the board, not clashes with it. */
+      /* OFFLINE-PARITY: Board border color matches the theme's lightBorder
+         in BOTH dark and light mode. This is exactly how the offline
+         chess-game.html does it — the border blends with the board's light
+         squares, giving a seamless premium look. */
       .chess-board[data-board-theme="classic"] { border-color: #f0d9b5; }
       .chess-board[data-board-theme="tournament"] { border-color: #ececd7; }
       .chess-board[data-board-theme="midnight"] { border-color: #d6d3d1; }
       .chess-board[data-board-theme="oceanic"] { border-color: #e9edf0; }
       .chess-board[data-board-theme="sunset"] { border-color: #fed7aa; }
-      /* In light mode, the border stays the same (matches the light square),
-         but we add a subtle outer ring for better definition against the
-         cream background. */
+      /* In light mode, add a subtle outer ring for better definition against
+         the cream background. */
       body.light-mode .chess-board {
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
       }
@@ -1043,10 +1075,13 @@
 
       .game-status {
         background: rgba(28, 25, 23, 0.8);
-        border: 1px solid #292524;
-        border-radius: 8px;
-        padding: 16px;
+        border: 1px solid rgba(245, 158, 11, 0.12);
+        border-radius: 10px;
+        padding: 14px 16px;
         margin-top: 16px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
       }
       /* ===== FIX: Inline error banner styles — visible & dismissible ===== */
       .game-error-banner {
@@ -1363,7 +1398,9 @@
     body.light-mode .tb-ctrl-btn { background: #fff; color: #57534e; border-color: #d6cfc1; }
     body.light-mode .tb-ctrl-btn:hover { background: #f5f5f0; color: #1c1917; }
 
-    /* Player cards — stacked vertically in the right sidebar */
+    /* Player cards — stacked vertically in the right sidebar.
+       Each card uses the theme's light-square color for the whole box
+       (avatar, color chip, etc.) so everything matches the board theme. */
     .new-player-cards-row {
       display: flex; flex-direction: column; gap: 8px;
       width: 100%;
@@ -1381,6 +1418,10 @@
       width: 36px; height: 36px; border-radius: 50%; display: flex;
       align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
       flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      /* Background & text colors come from CSS variables set per theme below.
+         Default = classic walnut (white piece = cream bg, dark text). */
+      background: var(--card-avatar-bg, #f0d9b5);
+      color: var(--card-avatar-fg, #1c1917);
     }
     .new-player-info { flex: 1; min-width: 0; }
     .new-player-name { font-size: 13px; font-weight: 600; color: #f5f5f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1390,16 +1431,40 @@
     .new-player-level .lvl-tone-casual { color: #7dd3fc; font-weight: 700; }
     .new-player-level .lvl-tone-beginner { color: #d6d3d1; font-weight: 700; }
     .new-player-stats { font-size: 9px; color: #78716c; }
+    /* Color chip — now uses the SAME theme color as the avatar so the
+       whole card (avatar + chip) looks unified. */
     .new-player-color-chip {
       display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px;
       border-radius: 5px; font-size: 10px; font-weight: 600; border: 1px solid;
       flex-shrink: 0;
+      background: var(--card-avatar-bg, #f0d9b5);
+      color: var(--card-avatar-fg, #1c1917);
+      border-color: rgba(0,0,0,0.1);
     }
-    .new-player-color-chip.white { background: #f5f5f4; color: #1c1917; border-color: #d6d3d1; }
-    .new-player-color-chip.black { background: #1c1917; color: #f5f5f4; border-color: #57534e; }
-    .new-player-color-chip .swatch { width: 8px; height: 8px; border-radius: 2px; }
-    .new-player-color-chip.white .swatch { background: #fff; border: 1px solid #d6d3d1; }
-    .new-player-color-chip.black .swatch { background: #1c1917; border: 1px solid #57534e; }
+    .new-player-color-chip .swatch {
+      width: 8px; height: 8px; border-radius: 2px;
+      background: var(--card-avatar-bg, #f0d9b5);
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+    /* Theme-aware avatar + chip colors.
+       When the board theme changes, the .chess-board[data-board-theme="X"]
+       selector drives CSS variables that the avatar & chip use.
+       We mirror those theme colors here on the player cards container. */
+    .new-player-cards-row[data-card-theme="classic"] {
+      --card-avatar-bg: #f0d9b5; --card-avatar-fg: #5b3a1a;
+    }
+    .new-player-cards-row[data-card-theme="tournament"] {
+      --card-avatar-bg: #ececd7; --card-avatar-fg: #2d4a1a;
+    }
+    .new-player-cards-row[data-card-theme="midnight"] {
+      --card-avatar-bg: #d6d3d1; --card-avatar-fg: #1c1917;
+    }
+    .new-player-cards-row[data-card-theme="oceanic"] {
+      --card-avatar-bg: #e9edf0; --card-avatar-fg: #1e3a5f;
+    }
+    .new-player-cards-row[data-card-theme="sunset"] {
+      --card-avatar-bg: #fed7aa; --card-avatar-fg: #7c2d12;
+    }
 
     /* Lost pieces boxes — stacked vertically in the right sidebar */
     .new-lost-row {
@@ -1704,11 +1769,11 @@
               </div>
             </div>
 
-            <!-- 15-minute chess clock -->
+            <!-- Per-move timer (15 min per move, resets every turn) -->
             <div class="new-clock-panel" id="new-clock-panel">
-              <div class="new-clock-header">⏱️ Game Clock · 15 min</div>
+              <div class="new-clock-header">⏱️ Move Timer · 15 min/move</div>
               <div class="new-clock-body" id="new-clock-body"></div>
-              <div class="new-clock-hint">Each player starts with 15:00. Clock ticks on your turn. Run out → lose on time.</div>
+              <div class="new-clock-hint">Each turn starts with a fresh 15:00. Make your move before it hits 0, or you lose on time. The clock resets every turn.</div>
             </div>
 
             <div class="game-status" id="game-status"></div>
@@ -1823,18 +1888,24 @@
           container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#a8a29e;font-size:12px;padding:8px;">Spectating</div>';
           return;
         }
+        // Sync the player cards' theme with the board theme so the avatar
+        // and color chip use the theme's light-square color (whole card matches).
+        container.dataset.cardTheme = currentBoardTheme || "classic";
         const myName = myColor === "w" ? (g.whiteUsername || "You") : (g.blackUsername || "You");
         const oppName = myColor === "w" ? (g.blackUsername || "Opponent") : (g.whiteUsername || "Opponent");
         const myWins = (currentUser && currentUser.stats && currentUser.stats.wins) ? currentUser.stats.wins : 0;
         const myLevel = levelFromWins(myWins);
         const myStats = (currentUser && currentUser.stats) ? currentUser.stats : { wins: 0, losses: 0, draws: 0 };
+        // NOTE: avatar and color chip no longer have inline colors — they use
+        // CSS variables driven by data-card-theme so the whole card matches
+        // the selected board theme.
         const cardHtml = (name, color, levelLabel, levelTone, stats, isMe) => '<div class="new-player-card">' +
-          '<div class="new-player-avatar" style="background:' + (color === "w" ? "#f5f5f4" : "#1c1917") + ';color:' + (color === "w" ? "#1c1917" : "#f5f5f4") + '">' + name[0].toUpperCase() + '</div>' +
+          '<div class="new-player-avatar">' + name[0].toUpperCase() + '</div>' +
           '<div class="new-player-info">' +
             '<div class="new-player-name">' + name + (isMe ? ' <span style="font-size:10px;color:#f59e0b;">(you)</span>' : "") + '</div>' +
             '<div class="new-player-level">Level: <span class="lvl-tone-' + levelTone + '">' + levelLabel + '</span> · <span class="new-player-stats">' + stats.wins + 'W ' + stats.losses + 'L ' + stats.draws + 'D</span></div>' +
           '</div>' +
-          '<span class="new-player-color-chip ' + (color === "w" ? "white" : "black") + '"><span class="swatch"></span>' + (color === "w" ? "White" : "Black") + '</span>' +
+          '<span class="new-player-color-chip"><span class="swatch"></span>' + (color === "w" ? "White" : "Black") + '</span>' +
         '</div>';
         container.innerHTML = cardHtml(myName, myColor, myLevel.label, myLevel.tone, myStats, true) +
           cardHtml(oppName, myColor === "w" ? "b" : "w", "Opponent", "beginner", { wins: 0, losses: 0, draws: 0 }, false);
@@ -1906,14 +1977,16 @@
         }
         const g = onlineGameState.game;
         const myColor = onlineGameState.myColor;
-        const INITIAL_TIME_MS = 15 * 60 * 1000;
-        const whiteStored = g.whiteTimeLeftMs ?? INITIAL_TIME_MS;
-        const blackStored = g.blackTimeLeftMs ?? INITIAL_TIME_MS;
+        const MOVE_TIME_MS = 15 * 60 * 1000;  // 15 min PER MOVE — resets every turn
         const turn = g.turn || "w";
-        const lastMoveAt = g.lastMoveAt || g.createdAt || Date.now();
+        const turnStartedAt = g.lastMoveAt || g.createdAt || Date.now();
         const isActive = g.status === "active";
-        const whiteLive = (isActive && turn === "w") ? Math.max(0, whiteStored - (Date.now() - lastMoveAt)) : whiteStored;
-        const blackLive = (isActive && turn === "b") ? Math.max(0, blackStored - (Date.now() - lastMoveAt)) : blackStored;
+        // PER-MOVE TIMER: the active player's clock counts down from 15:00.
+        // The inactive player shows the full 15:00 (ready) — it'll reset when their turn comes.
+        const elapsed = Date.now() - turnStartedAt;
+        const activeRemaining = Math.max(0, MOVE_TIME_MS - elapsed);
+        const whiteLive = (isActive && turn === "w") ? activeRemaining : MOVE_TIME_MS;
+        const blackLive = (isActive && turn === "b") ? activeRemaining : MOVE_TIME_MS;
         const rowHtml = (name, color, ms) => {
           const isTurn = isActive && turn === color;
           const isLow = ms <= 30000 && isTurn;
@@ -1921,7 +1994,7 @@
             '<span class="new-clock-dot ' + (color === "w" ? "white" : "black") + '"></span>' +
             '<div style="flex:1;min-width:0;">' +
               '<div class="new-clock-name">' + name + (color === myColor ? ' <span style="font-size:10px;color:#f59e0b;">(you)</span>' : "") + '</div>' +
-              '<div class="new-clock-color">' + (color === "w" ? "White" : "Black") + '</div>' +
+              '<div class="new-clock-color">' + (color === "w" ? "White" : "Black") + (isTurn ? " · your move" : " · ready") + '</div>' +
             '</div>' +
             '<div class="new-clock-time">' + formatClockTime(ms) + '</div>' +
           '</div>';
@@ -2965,7 +3038,7 @@
         const black = fromPlaysWhite
           ? { uid: c.toUid, username: c.toUsername }
           : { uid: c.fromUid, username: c.fromUsername };
-        const INITIAL_TIME_MS = 15 * 60 * 1000;
+        const MOVE_TIME_MS = 15 * 60 * 1000;  // 15 minutes PER MOVE (resets every turn)
         const gameRef = await addDoc(collection(db, "games"), {
           whiteUid: white.uid, whiteUsername: white.username,
           blackUid: black.uid, blackUsername: black.username,
@@ -2975,8 +3048,9 @@
           createdAt: Date.now(),
           createdAtServer: serverTimestamp(),
           endedAt: null,
-          whiteTimeLeftMs: INITIAL_TIME_MS,
-          blackTimeLeftMs: INITIAL_TIME_MS,
+          // PER-MOVE TIMER: lastMoveAt marks when the current turn started.
+          // The clock resets to MOVE_TIME_MS (15:00) at the start of every turn.
+          // No per-player accumulated time is stored — just the turn start timestamp.
           lastMoveAt: Date.now(),
         });
         await updateDoc(doc(db, "challenges", c.id), {
@@ -3049,19 +3123,20 @@
         // ===== FIX: Render immediately so the board isn't blank while waiting for Firestore.
         renderOnlineGame();
 
-        // ===== NEW: Chess clock tick interval — counts down the active
-        // player's clock every 250ms and auto-flags on timeout.
+        // ===== PER-MOVE TIMER: tick interval — counts down the current
+        // player's move time. The clock resets to MOVE_TIME_MS (15:00) at the
+        // start of every turn (when lastMoveAt is updated). No accumulated
+        // per-player time is stored — we just compute remaining from lastMoveAt.
         if (clockTickInterval) clearInterval(clockTickInterval);
         clockTickInterval = setInterval(() => {
           if (!onlineGameState || !onlineGameState.game) return;
           const g = onlineGameState.game;
           if (g.status !== "active") return;
-          const INITIAL_TIME_MS = 15 * 60 * 1000;
+          const MOVE_TIME_MS = 15 * 60 * 1000;
           const turn = g.turn || "w";
-          const lastMoveAt = g.lastMoveAt || g.createdAt || Date.now();
-          const elapsed = Date.now() - lastMoveAt;
-          const stored = turn === "w" ? (g.whiteTimeLeftMs ?? INITIAL_TIME_MS) : (g.blackTimeLeftMs ?? INITIAL_TIME_MS);
-          const liveRemaining = Math.max(0, stored - elapsed);
+          const turnStartedAt = g.lastMoveAt || g.createdAt || Date.now();
+          const elapsed = Date.now() - turnStartedAt;
+          const liveRemaining = Math.max(0, MOVE_TIME_MS - elapsed);
           updateClockDisplay(liveRemaining);
           if (liveRemaining <= 0 && !clockFlagged) {
             clockFlagged = true;
@@ -3500,28 +3575,21 @@
           fen: trial.fen(),
           turn: onlineGameState.myColor === "w" ? "b" : "w",
         };
-        // ===== NEW: Deduct time from the mover's chess clock =====
-        const INITIAL_TIME_MS = 15 * 60 * 1000;
+        // ===== PER-MOVE TIMER: check if the mover took too long, then reset the clock =====
+        // The clock is a per-move time limit (15 min). If the mover exceeded it,
+        // they lose on time. Either way, lastMoveAt is updated to NOW, which
+        // RESETS the clock to a full 15:00 for the next player's turn.
+        const MOVE_TIME_MS = 15 * 60 * 1000;
         const g = onlineGameState.game || {};
-        const lastMoveAt = g.lastMoveAt || g.createdAt || Date.now();
-        const elapsed = Math.max(0, Date.now() - lastMoveAt);
-        if (onlineGameState.myColor === "w") {
-          const remaining = Math.max(0, (g.whiteTimeLeftMs ?? INITIAL_TIME_MS) - elapsed);
-          patch.whiteTimeLeftMs = remaining;
-          if (remaining <= 0 && !trial.isCheckmate() && !trial.isStalemate() && !trial.isDraw()) {
-            patch.status = "finished";
-            patch.winner = "black";
-            patch.endedAt = Date.now();
-          }
-        } else {
-          const remaining = Math.max(0, (g.blackTimeLeftMs ?? INITIAL_TIME_MS) - elapsed);
-          patch.blackTimeLeftMs = remaining;
-          if (remaining <= 0 && !trial.isCheckmate() && !trial.isStalemate() && !trial.isDraw()) {
-            patch.status = "finished";
-            patch.winner = "white";
-            patch.endedAt = Date.now();
-          }
+        const turnStartedAt = g.lastMoveAt || g.createdAt || Date.now();
+        const elapsed = Date.now() - turnStartedAt;
+        if (elapsed > MOVE_TIME_MS && !trial.isCheckmate() && !trial.isStalemate() && !trial.isDraw()) {
+          // Mover took too long — they lose on time, opponent wins.
+          patch.status = "finished";
+          patch.winner = onlineGameState.myColor === "w" ? "black" : "white";
+          patch.endedAt = Date.now();
         }
+        // Reset the clock for the next player's turn.
         patch.lastMoveAt = Date.now();
         // Check for game over
         if (trial.isCheckmate()) {
@@ -3543,7 +3611,10 @@
 
       // ===== NEW: Topbar control button event listeners =====
       (function setupTopbarControls() {
-        // Sound toggle — loads saved preference on init, persists on toggle
+        // Sound toggle — loads saved preference on init, persists on toggle.
+        // When sound is turned off, we SUSPEND the AudioContext so any
+        // currently-playing or pending sounds (move, capture, check, victory,
+        // defeat) are immediately silenced. When turned back on, we resume it.
         const btnSound = document.getElementById("tb-sound");
         if (btnSound) {
           // Load saved preference (default: sound ON)
@@ -3560,7 +3631,24 @@
           btnSound.title = soundEnabled ? "Disable sound" : "Enable sound";
           btnSound.addEventListener("click", () => {
             soundEnabled = !soundEnabled;
-            if (window.ChessSound) ChessSound.enabled = soundEnabled;
+            if (window.ChessSound) {
+              ChessSound.enabled = soundEnabled;
+              // Suspend/resume the AudioContext to immediately silence any
+              // in-flight sounds when muting (and re-enable audio when unmuting).
+              try {
+                if (window.ChessSound.ctx) {
+                  if (soundEnabled) {
+                    if (window.ChessSound.ctx.state === 'suspended') {
+                      window.ChessSound.ctx.resume();
+                    }
+                  } else {
+                    if (window.ChessSound.ctx.state === 'running') {
+                      window.ChessSound.ctx.suspend();
+                    }
+                  }
+                }
+              } catch (_) {}
+            }
             try { localStorage.setItem("chess-sound-enabled", soundEnabled ? "1" : "0"); } catch (_) {}
             btnSound.textContent = soundEnabled ? "🔊" : "🔇";
             btnSound.classList.toggle("active", !soundEnabled);
@@ -3613,6 +3701,9 @@
             currentBoardTheme = swatch.dataset.theme;
             const board = document.getElementById("board");
             if (board) board.dataset.boardTheme = currentBoardTheme;
+            // Re-render player cards so their avatar + color chip pick up
+            // the new theme color (whole card matches the board theme).
+            renderPlayerCards();
           });
         });
       })();
