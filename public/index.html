@@ -2283,81 +2283,144 @@
  }, 3200);
  })();
 
- // ===== BACKGROUND MUSIC (BGM) — subtle chess-vibe ambient music =====
- // Generated procedurally via Web Audio API (no external files).
- // A slow, warm, ambient pad with gentle chord changes — gives a
- // premium chess-lounge vibe on the home page. Controlled by the
- // existing sound button (on/off).
+ // ===== BACKGROUND MUSIC (BGM) — professional aesthetic chess-gaming music =====
+ // A rich, layered composition with:
+ //   - Warm pad chords (ambient base)
+ //   - Gentle arpeggio melody (chess-contemplative)
+ //   - Deep sub bass (grounding)
+ //   - Soft triangle wave bells (atmospheric accents)
+ // Controlled by the existing sound button (on/off). Default: ON.
  const ChessBGM = {
-   ctx: null, master: null, playing: false, enabled: true, chordTimer: null,
+   ctx: null, master: null, padBus: null, melBus: null, bassBus: null,
+   playing: false, enabled: true, stepTimer: null, step: 0,
+
    init() {
      if (this.ctx) return;
      try {
        const Ctx = window.AudioContext || window.webkitAudioContext;
        this.ctx = new Ctx();
+       // Master bus with reverb-like delay for spaciousness
        this.master = this.ctx.createGain();
        this.master.gain.value = 0;
+       const delay = this.ctx.createDelay(1);
+       delay.delayTime.value = 0.38;
+       const delayFb = this.ctx.createGain();
+       delayFb.gain.value = 0.35;
+       const delayWet = this.ctx.createGain();
+       delayWet.gain.value = 0.25;
        this.master.connect(this.ctx.destination);
+       this.master.connect(delay);
+       delay.connect(delayFb); delayFb.connect(delay);
+       delay.connect(delayWet); delayWet.connect(this.ctx.destination);
+       // Sub-buses with their own gain + lowpass for warmth
+       this.padBus = this.ctx.createGain(); this.padBus.gain.value = 0.5;
+       this.melBus = this.ctx.createGain(); this.melBus.gain.value = 0.4;
+       this.bassBus = this.ctx.createGain(); this.bassBus.gain.value = 0.6;
+       const padLP = this.ctx.createBiquadFilter();
+       padLP.type = 'lowpass'; padLP.frequency.value = 1200; padLP.Q.value = 0.5;
+       const melLP = this.ctx.createBiquadFilter();
+       melLP.type = 'lowpass'; melLP.frequency.value = 2500; melLP.Q.value = 0.7;
+       const bassLP = this.ctx.createBiquadFilter();
+       bassLP.type = 'lowpass'; bassLP.frequency.value = 400; bassLP.Q.value = 0.5;
+       this.padBus.connect(padLP); padLP.connect(this.master);
+       this.melBus.connect(melLP); melLP.connect(this.master);
+       this.bassBus.connect(bassLP); bassLP.connect(this.master);
      } catch (e) { console.warn('BGM init failed', e); }
    },
-   playChord(freqs) {
+
+   // Play a single note on a given bus with ADSR envelope
+   playNote(freq, bus, startTime, dur, gain, type) {
+     if (!this.ctx) return;
+     const osc = this.ctx.createOscillator();
+     osc.type = type || 'sine';
+     osc.frequency.value = freq;
+     const g = this.ctx.createGain();
+     g.gain.setValueAtTime(0, startTime);
+     g.gain.linearRampToValueAtTime(gain, startTime + 0.05);
+     g.gain.linearRampToValueAtTime(gain * 0.7, startTime + 0.2);
+     g.gain.linearRampToValueAtTime(gain * 0.5, startTime + dur * 0.5);
+     g.gain.linearRampToValueAtTime(0, startTime + dur);
+     osc.connect(g); g.connect(bus);
+     osc.start(startTime); osc.stop(startTime + dur + 0.1);
+   },
+
+   // The composition: 16-step loop, 8 seconds per loop
+   // Chord progression: Dm9 → G7sus4 → Cmaj9 → Am7 (ii-V-I-vi, jazzy chess vibe)
+   // Each step = 500ms
+   stepDur: 0.5,
+   chords: [
+     // Dm9: D F A C E
+     { root: 146.83, notes: [146.83, 174.61, 220, 261.63, 329.63], bass: 73.42 },
+     // G7sus4: G C D F
+     { root: 196, notes: [196, 261.63, 293.66, 349.23], bass: 98 },
+     // Cmaj9: C E G B D
+     { root: 261.63, notes: [261.63, 329.63, 392, 493.88, 587.33], bass: 130.81 },
+     // Am7: A C E G
+     { root: 220, notes: [220, 261.63, 329.63, 392], bass: 110 },
+   ],
+   // Arpeggio pattern: which note of the chord to play at each step (index into chord.notes)
+   arpPattern: [0, 2, 1, 3, 2, 4, 3, 1, 0, 2, 4, 3, 1, 2, 0, 3],
+
+   playStep() {
      if (!this.ctx || !this.enabled) return;
      const now = this.ctx.currentTime;
-     const dur = 6;
-     freqs.forEach(freq => {
-       const osc = this.ctx.createOscillator();
-       osc.type = 'sine';
-       osc.frequency.value = freq;
-       const g = this.ctx.createGain();
-       g.gain.setValueAtTime(0, now);
-       g.gain.linearRampToValueAtTime(0.04, now + 2);
-       g.gain.linearRampToValueAtTime(0.04, now + dur - 2);
-       g.gain.linearRampToValueAtTime(0, now + dur);
-       const lp = this.ctx.createBiquadFilter();
-       lp.type = 'lowpass'; lp.frequency.value = 800; lp.Q.value = 0.5;
-       osc.connect(g); g.connect(lp); lp.connect(this.master);
-       osc.start(now); osc.stop(now + dur + 0.5);
-     });
+     const chordIdx = Math.floor(this.step / 4) % 4;
+     const chord = this.chords[chordIdx];
+     // Pad chord — play on first step of each chord (every 4 steps = 2s)
+     if (this.step % 4 === 0) {
+       chord.notes.forEach(freq => {
+         this.playNote(freq, this.padBus, now, 2.2, 0.06, 'sine');
+       });
+       // Sub bass
+       this.playNote(chord.bass, this.bassBus, now, 2, 0.12, 'triangle');
+     }
+     // Arpeggio melody — one note per step
+     const arpIdx = this.arpPattern[this.step % 16];
+     if (arpIdx < chord.notes.length) {
+       const note = chord.notes[arpIdx] * 2; // octave up for melody
+       this.playNote(note, this.melBus, now, 0.45, 0.05, 'triangle');
+       // Add a soft sine layer for richness
+       this.playNote(note, this.melBus, now, 0.45, 0.03, 'sine');
+     }
+     // Atmospheric bell every 8 steps (once per 2 chords)
+     if (this.step % 8 === 4) {
+       const bellFreq = chord.notes[0] * 4; // 2 octaves up
+       this.playNote(bellFreq, this.melBus, now, 1.5, 0.02, 'sine');
+     }
+     this.step = (this.step + 1) % 16;
    },
+
    start() {
      if (this.playing) return;
      this.init();
      if (!this.ctx) return;
      this.playing = true;
      this.enabled = soundEnabled;
+     this.step = 0;
      this.master.gain.cancelScheduledValues(this.ctx.currentTime);
      this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.5 : 0, this.ctx.currentTime + 2);
-     const chords = [
-       [220, 329.63, 440],
-       [174.61, 261.63, 349.23],
-       [261.63, 392, 523.25],
-       [196, 293.66, 392],
-     ];
-     let i = 0;
-     const playNext = () => {
-       if (!this.playing) return;
-       this.playChord(chords[i % chords.length]);
-       i++;
-       this.chordTimer = setTimeout(playNext, 6000);
-     };
-     playNext();
+     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.6 : 0, this.ctx.currentTime + 2);
+     // Play first step immediately, then schedule every 500ms
+     this.playStep();
+     this.stepTimer = setInterval(() => this.playStep(), 500);
    },
+
    stop() {
      this.playing = false;
-     if (this.chordTimer) { clearTimeout(this.chordTimer); this.chordTimer = null; }
+     if (this.stepTimer) { clearInterval(this.stepTimer); this.stepTimer = null; }
      if (this.master && this.ctx) {
        this.master.gain.cancelScheduledValues(this.ctx.currentTime);
        this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
        this.master.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 1);
      }
    },
+
    setEnabled(on) {
      this.enabled = on;
      if (this.master && this.ctx) {
        this.master.gain.cancelScheduledValues(this.ctx.currentTime);
        this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-       this.master.gain.linearRampToValueAtTime(on ? 0.5 : 0, this.ctx.currentTime + 0.5);
+       this.master.gain.linearRampToValueAtTime(on ? 0.6 : 0, this.ctx.currentTime + 0.5);
      }
    }
  };
