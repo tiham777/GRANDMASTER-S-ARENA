@@ -866,19 +866,15 @@
       }
       #online-game > * { position: relative; z-index: 1; }
 
-      /* ===== 3-column layout: left sidebar | board | right sidebar ===== */
+      /* ===== 2-column layout: board (left) | info sidebar (right) ===== */
       .online-game-grid {
         display: grid;
-        grid-template-columns: 240px minmax(0, 1fr) 320px;
-        gap: 24px;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 32px;
         align-items: start;
       }
-      @media (max-width: 1200px) {
-        .online-game-grid { grid-template-columns: 1fr; gap: 16px; }
-      }
-      .game-left-col {
-        display: flex; flex-direction: column; gap: 12px;
-        min-width: 0;
+      @media (max-width: 980px) {
+        .online-game-grid { grid-template-columns: 1fr; gap: 20px; }
       }
       .game-board-col {
         display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -1174,7 +1170,6 @@
     body.focus-mode .new-lost-row,
     body.focus-mode .new-board-picker,
     body.focus-mode .game-side-col,
-    body.focus-mode .game-left-col,
     body.focus-mode .player-bar { display: none !important; }
     body.focus-mode .game-board-col { max-width: 700px !important; margin: 0 auto !important; }
     body.focus-mode .online-game-grid { grid-template-columns: 1fr !important; }
@@ -1191,102 +1186,111 @@
     body.light-mode .tb-ctrl-btn { background: #fff; color: #57534e; border-color: #d6cfc1; }
     body.light-mode .tb-ctrl-btn:hover { background: #f5f5f0; color: #1c1917; }
 
-    /* Player cards — stacked vertically in the left sidebar */
+    /* Player cards — stacked vertically in the right sidebar */
     .new-player-cards-row {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 8px;
       width: 100%;
     }
     .new-player-card {
       width: 100%;
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: 10px; border: 1px solid rgba(168,162,158,0.15);
+      background: linear-gradient(135deg, rgba(28,25,23,0.8) 0%, rgba(41,37,36,0.6) 100%);
+      backdrop-filter: blur(6px);
+      transition: border-color 0.2s;
     }
-    .new-player-card {
-      display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-      border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
-    }
+    .new-player-card:hover { border-color: rgba(245,158,11,0.3); }
     .new-player-avatar {
-      width: 40px; height: 40px; border-radius: 50%; display: flex;
-      align-items: center; justify-content: center; font-weight: 700; font-size: 16px;
-      flex-shrink: 0;
+      width: 36px; height: 36px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
+      flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .new-player-info { flex: 1; min-width: 0; }
-    .new-player-name { font-size: 14px; font-weight: 600; color: #f5f5f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .new-player-level { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #a8a29e; margin-top: 2px; }
-    .new-player-level .lvl-tone-master { color: #fbbf24; }
-    .new-player-level .lvl-tone-skilled { color: #6ee7b7; }
-    .new-player-level .lvl-tone-casual { color: #7dd3fc; }
-    .new-player-level .lvl-tone-beginner { color: #d6d3d1; }
-    .new-player-stats { font-size: 10px; color: #78716c; margin-top: 1px; }
+    .new-player-name { font-size: 13px; font-weight: 600; color: #f5f5f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .new-player-level { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #a8a29e; margin-top: 2px; }
+    .new-player-level .lvl-tone-master { color: #fbbf24; font-weight: 700; }
+    .new-player-level .lvl-tone-skilled { color: #6ee7b7; font-weight: 700; }
+    .new-player-level .lvl-tone-casual { color: #7dd3fc; font-weight: 700; }
+    .new-player-level .lvl-tone-beginner { color: #d6d3d1; font-weight: 700; }
+    .new-player-stats { font-size: 9px; color: #78716c; }
     .new-player-color-chip {
-      display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px;
-      border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid;
+      display: inline-flex; align-items: center; gap: 4px; padding: 3px 7px;
+      border-radius: 5px; font-size: 10px; font-weight: 600; border: 1px solid;
+      flex-shrink: 0;
     }
     .new-player-color-chip.white { background: #f5f5f4; color: #1c1917; border-color: #d6d3d1; }
-    .new-player-color-chip.black { background: #1c1917; color: #f5f5f4; border-color: #44403c; }
-    .new-player-color-chip .swatch { width: 10px; height: 10px; border-radius: 2px; }
+    .new-player-color-chip.black { background: #1c1917; color: #f5f5f4; border-color: #57534e; }
+    .new-player-color-chip .swatch { width: 8px; height: 8px; border-radius: 2px; }
     .new-player-color-chip.white .swatch { background: #fff; border: 1px solid #d6d3d1; }
     .new-player-color-chip.black .swatch { background: #1c1917; border: 1px solid #57534e; }
 
-    /* Lost pieces boxes — stacked vertically in the left sidebar */
+    /* Lost pieces boxes — stacked vertically in the right sidebar */
     .new-lost-row {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 8px;
       width: 100%;
     }
     .new-lost-box {
-      border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
-      padding: 10px 14px;
+      border-radius: 10px; border: 1px solid rgba(168,162,158,0.15);
+      background: rgba(28,25,23,0.5); padding: 8px 12px;
+      backdrop-filter: blur(6px);
     }
-    .new-lost-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .new-lost-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: #d6d3d1; }
-    .new-lost-subtitle { font-size: 10px; color: #78716c; }
-    .new-lost-pieces { display: flex; flex-wrap: wrap; gap: 1px; min-height: 24px; align-items: center; }
-    .new-lost-pieces .glyph { font-size: 20px; line-height: 1; }
-    .new-lost-pieces .glyph.white-piece { color: #f5f5f4; }
-    .new-lost-pieces .glyph.black-piece { color: #57534e; }
+    .new-lost-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .new-lost-title { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: #a8a29e; }
+    .new-lost-subtitle { font-size: 9px; color: #78716c; font-weight: 600; }
+    .new-lost-pieces { display: flex; flex-wrap: wrap; gap: 1px; min-height: 22px; align-items: center; }
+    .new-lost-pieces .glyph { font-size: 18px; line-height: 1; }
+    .new-lost-pieces .glyph.white-piece { color: #f5f5f4; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+    .new-lost-pieces .glyph.black-piece { color: #57534e; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
     body.light-mode .new-lost-pieces .glyph.black-piece { color: #1c1917; }
-    .new-lost-pieces .empty { font-size: 11px; font-style: italic; color: #78716c; }
+    .new-lost-pieces .empty { font-size: 10px; font-style: italic; color: #78716c; }
 
-    /* Board color picker — in the left sidebar */
+    /* Board color picker — in the right sidebar */
     .new-board-picker {
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-      width: 100%; padding: 8px 14px;
-      border-radius: 12px; border: 1px solid #44403c; background: #1c1917;
+      width: 100%; padding: 8px 12px;
+      border-radius: 10px; border: 1px solid rgba(168,162,158,0.15);
+      background: rgba(28,25,23,0.5); backdrop-filter: blur(6px);
     }
-    .new-board-picker-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #a8a29e; }
-    .new-board-swatches { display: flex; gap: 6px; }
+    .new-board-picker-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #a8a29e; font-weight: 700; }
+    .new-board-swatches { display: flex; gap: 5px; }
     .new-board-swatch {
-      width: 28px; height: 28px; border-radius: 6px; overflow: hidden;
-      border: 2px solid #44403c; cursor: pointer; display: flex; transition: transform 0.1s;
+      width: 26px; height: 26px; border-radius: 6px; overflow: hidden;
+      border: 2px solid rgba(168,162,158,0.2); cursor: pointer; display: flex;
+      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
     }
-    .new-board-swatch:hover { transform: scale(1.1); }
-    .new-board-swatch.selected { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.4); }
+    .new-board-swatch:hover { transform: scale(1.12); border-color: rgba(245,158,11,0.5); }
+    .new-board-swatch.selected { border-color: #f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.35), 0 2px 8px rgba(245,158,11,0.2); }
     .new-board-swatch .half { width: 50%; height: 100%; }
 
-    /* Chess clock panel (right side) */
+    /* Chess clock panel (right sidebar) */
     .new-clock-panel {
-      border-radius: 14px; border: 1px solid #44403c; background: #1c1917;
-      overflow: hidden; margin-bottom: 12px;
+      border-radius: 12px; border: 1px solid rgba(168,162,158,0.15);
+      background: linear-gradient(135deg, rgba(28,25,23,0.8) 0%, rgba(41,37,36,0.6) 100%);
+      overflow: hidden; backdrop-filter: blur(6px);
     }
     .new-clock-header {
-      padding: 10px 14px; border-bottom: 1px solid #44403c;
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-      color: #a8a29e; display: flex; align-items: center; gap: 6px;
+      padding: 8px 12px; border-bottom: 1px solid rgba(168,162,158,0.12);
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: #fbbf24; display: flex; align-items: center; gap: 6px;
+      background: rgba(245,158,11,0.05);
     }
-    .new-clock-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .new-clock-body { padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
     .new-clock-row {
-      display: flex; align-items: center; gap: 10px; padding: 8px 12px;
-      border-radius: 8px; border: 1px solid #44403c; background: rgba(0,0,0,0.3);
+      display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+      border-radius: 8px; border: 1px solid rgba(168,162,158,0.12);
+      background: rgba(0,0,0,0.25); transition: all 0.2s;
     }
-    .new-clock-row.active { border-color: rgba(245,158,11,0.5); background: rgba(245,158,11,0.1); }
+    .new-clock-row.active { border-color: rgba(245,158,11,0.5); background: rgba(245,158,11,0.1); box-shadow: 0 0 12px rgba(245,158,11,0.1); }
     .new-clock-row.low-time { border-color: rgba(244,63,94,0.5); background: rgba(244,63,94,0.1); }
-    .new-clock-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid; flex-shrink: 0; }
+    .new-clock-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid; flex-shrink: 0; }
     .new-clock-dot.white { background: #f5f5f4; border-color: #d6d3d1; }
     .new-clock-dot.black { background: #1c1917; border-color: #57534e; }
-    .new-clock-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: #f5f5f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .new-clock-color { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #78716c; }
-    .new-clock-time { font-family: monospace; font-size: 18px; font-weight: 700; color: #d6d3d1; }
+    .new-clock-name { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: #f5f5f4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .new-clock-color { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: #78716c; }
+    .new-clock-time { font-family: 'SF Mono', 'Monaco', 'Cascadia Code', monospace; font-size: 17px; font-weight: 700; color: #d6d3d1; font-variant-numeric: tabular-nums; }
     .new-clock-row.active .new-clock-time { color: #fbbf24; }
     .new-clock-row.low-time .new-clock-time { color: #fb7185; animation: pulse 1s infinite; }
-    .new-clock-hint { font-size: 10px; color: #78716c; padding: 0 4px 6px; }
+    .new-clock-hint { font-size: 9px; color: #78716c; padding: 0 4px 6px; line-height: 1.4; }
 
     /* Color picker dialog (for challenges) */
     .color-pick-overlay {
@@ -1480,14 +1484,21 @@
         <div id="tab-history" class="hidden"></div>
       </div>
 
-      <!-- ONLINE GAME ROOM — 3-column layout: left sidebar | board | right sidebar -->
+      <!-- ONLINE GAME ROOM — 2-column layout: board (left) | info sidebar (right) -->
       <div id="online-game" class="hidden">
         <!-- Error banner (kept from previous patch) -->
         <div id="game-error-banner" class="game-error-banner hidden"></div>
 
         <div class="online-game-grid">
-          <!-- LEFT SIDEBAR: Player cards + Lost pieces + Board theme picker -->
-          <div class="game-left-col">
+          <!-- LEFT: Board (original size preserved) -->
+          <div class="game-board-col">
+            <div class="player-bar hidden" id="bar-top"></div>
+            <div class="chess-board" id="board" data-board-theme="classic"></div>
+            <div class="player-bar hidden" id="bar-bottom"></div>
+          </div>
+
+          <!-- RIGHT SIDEBAR: Player cards + Lost pieces + Board theme + Clock + Status + Moves -->
+          <div class="game-side-col">
             <!-- Player cards — MY card first, OPPONENT card after -->
             <div class="new-player-cards-row" id="new-player-cards"></div>
 
@@ -1515,23 +1526,14 @@
                 </button>
               </div>
             </div>
-          </div>
 
-          <!-- CENTER: Board only (player bars hidden — info is in left sidebar now) -->
-          <div class="game-board-col">
-            <div class="player-bar hidden" id="bar-top"></div>
-            <div class="chess-board" id="board" data-board-theme="classic"></div>
-            <div class="player-bar hidden" id="bar-bottom"></div>
-          </div>
-
-          <!-- RIGHT: 15-min clock + status + move history -->
-          <div class="game-side-col">
             <!-- 15-minute chess clock -->
             <div class="new-clock-panel" id="new-clock-panel">
               <div class="new-clock-header">⏱️ Game Clock · 15 min</div>
               <div class="new-clock-body" id="new-clock-body"></div>
               <div class="new-clock-hint">Each player starts with 15:00. Clock ticks on your turn. Run out → lose on time.</div>
             </div>
+
             <div class="game-status" id="game-status"></div>
             <div class="move-list hidden" id="move-list">
               <div class="move-list-header">Moves</div>
@@ -3108,7 +3110,11 @@
 
       function renderPlayerBar(id, name, color, isTurn, isYou) {
         const el = document.getElementById(id);
-        el.className = "player-bar" + (isTurn ? " turn" : "");
+        // PRESERVE the "hidden" class if present — we hide bar-top/bar-bottom
+        // because player info now lives in the right sidebar player cards.
+        const wasHidden = el.classList.contains("hidden");
+        el.className = "player-bar" + (isTurn ? " turn" : "") + (wasHidden ? " hidden" : "");
+        if (wasHidden) return;  // don't bother rendering content into a hidden bar
         el.innerHTML = `
           <div class="player-bar-info">
             <div class="topbar-avatar" style="background:${color === "w" ? "#f5f5f4" : "#1c1917"};color:${color === "w" ? "#1c1917" : "#f5f5f4"}">${name[0].toUpperCase()}</div>
@@ -3360,14 +3366,28 @@
 
       // ===== NEW: Topbar control button event listeners =====
       (function setupTopbarControls() {
-        // Sound toggle
+        // Sound toggle — loads saved preference on init, persists on toggle
         const btnSound = document.getElementById("tb-sound");
         if (btnSound) {
+          // Load saved preference (default: sound ON)
+          try {
+            const saved = localStorage.getItem("chess-sound-enabled");
+            if (saved !== null) {
+              soundEnabled = (saved === "1");
+              if (window.ChessSound) ChessSound.enabled = soundEnabled;
+            }
+          } catch (_) {}
+          // Update button icon to match current state
+          btnSound.textContent = soundEnabled ? "🔊" : "🔇";
+          btnSound.classList.toggle("active", !soundEnabled);
+          btnSound.title = soundEnabled ? "Disable sound" : "Enable sound";
           btnSound.addEventListener("click", () => {
             soundEnabled = !soundEnabled;
             if (window.ChessSound) ChessSound.enabled = soundEnabled;
+            try { localStorage.setItem("chess-sound-enabled", soundEnabled ? "1" : "0"); } catch (_) {}
             btnSound.textContent = soundEnabled ? "🔊" : "🔇";
             btnSound.classList.toggle("active", !soundEnabled);
+            btnSound.title = soundEnabled ? "Disable sound" : "Enable sound";
           });
         }
         // Theme toggle (light/dark)
