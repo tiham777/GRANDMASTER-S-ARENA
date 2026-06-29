@@ -153,6 +153,28 @@ Error generating stack: `+a.message+`
       }
       .flex.items-center.justify-between.mb-3 { margin-bottom: 6px !important; }
 
+      /* ===== HIDE all time-related buttons in the offline play page =====
+         The offline page has a "Clock / Time Format" section with buttons
+         like Bullet (1m), Blitz (3m), Rapid (10m), Classic (30m), Untimed.
+         We hide the entire section so the user can't see or change the
+         time control. The per-move timer override (in JS) handles all
+         timing — the time format buttons are no longer needed. */
+      .grid.grid-cols-2.sm\:grid-cols-4.md\:grid-cols-4.xl\:grid-cols-2.gap-1\.5 {
+        display: none !important;
+      }
+      /* Also hide the "Clock / Time Format:" label */
+      label:has(+ .grid.grid-cols-2.sm\:grid-cols-4) {
+        display: none !important;
+      }
+      /* Hide the label by its text content via a more specific selector */
+      .mb-5 > label.text-xs.font-bold.text-stone-600.mb-1\.5 {
+        display: none !important;
+      }
+      /* Hide the Rotate Board button's parent if it's in the same section
+         as the time format (we keep Rotate Board visible by NOT hiding
+         the parent — only the time-related children). */
+      /* The "mt-2" Rotate Board button stays visible. */
+
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
@@ -264,13 +286,19 @@ Error generating stack: `+a.message+`
         // ===== PER-MOVE TIMER (like the online page) =====
         try {
           var PER_MOVE_TIMER = {
-            initialTimeSec: 600,
+            // Fixed 15-minute per-move timer (time control buttons are hidden).
+            initialTimeSec: 15 * 60 * 1000 / 1000,  // 900 seconds = 15 minutes
             turnStartTime: null,
             lastActiveColor: null,
             overrideInterval: null,
             timedOut: false,
 
             readInitialTime: function() {
+              // Time control buttons are hidden via CSS, so we always use
+              // a fixed 15-minute per-move timer. This function is kept for
+              // compatibility but does nothing — the initialTimeSec is fixed.
+              // (If buttons become visible again in the future, this will
+              // auto-detect the selected time control.)
               try {
                 var buttons = document.querySelectorAll('button');
                 for (var i = 0; i < buttons.length; i++) {
