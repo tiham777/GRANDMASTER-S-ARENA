@@ -67,38 +67,13 @@ Error generating stack: `+a.message+`
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
       }
 
-      /* Topbar — amber-tinted bottom border + shadow (dark mode, like online page) */
-      html.dark header.sticky, html.dark header[class*="sticky"] {
+      /* Topbar — amber-tinted bottom border + shadow (like online page) */
+      header.sticky, header[class*="sticky"] {
         background: rgba(12, 10, 9, 0.88) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
         border-bottom: 1px solid rgba(245, 158, 11, 0.12) !important;
         box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
-      }
-      /* Topbar in LIGHT mode — warm cream background like the online page.
-         The offline page toggles the `dark` class on <html>, so light mode
-         = html WITHOUT the dark class. We target html:not(.dark). */
-      html:not(.dark) header.sticky, html:not(.dark) header[class*="sticky"] {
-        background: rgba(255, 252, 247, 0.95) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border-bottom: 1px solid #e2dccd !important;
-        box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-      }
-      /* Topbar text color in light mode — dark text on cream background */
-      html:not(.dark) header.sticky, html:not(.dark) header[class*="sticky"],
-      html:not(.dark) header.sticky *, html:not(.dark) header[class*="sticky"] * {
-        color: #1c1917 !important;
-      }
-      /* Topbar icons/buttons in light mode — keep amber accents visible */
-      html:not(.dark) header.sticky button, html:not(.dark) header[class*="sticky"] button {
-        background: rgba(255, 255, 255, 0.8) !important;
-        border-color: #d6cfc1 !important;
-        color: #57534e !important;
-      }
-      html:not(.dark) header.sticky button:hover, html:not(.dark) header[class*="sticky"] button:hover {
-        background: #faf7f2 !important;
-        color: #1c1917 !important;
       }
 
       /* ===== BOARD BORDER: dark mode matches theme light square ===== */
@@ -128,53 +103,6 @@ Error generating stack: `+a.message+`
          The board's position is determined by normal document flow
          (it sits below the captured pieces box + its margin-bottom). */
 
-      /* ===== MORE SPACE between the board and everything below it =====
-         The board container has elements below it (captured pieces, timers,
-         interface aesthetics). We add margin-bottom to the board's parent
-         container so there's a comfortable gap between the board and the
-         stuff below it — without moving the board itself. */
-      .chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
-        margin-bottom: 32px !important;
-      }
-
-      /* NOTE: Do NOT add margin-bottom to the right-side panels — that would
-         create unwanted extra space between the buttons/sections in the
-         right sidebar. The original gap between sections is preserved. */
-
-      /* ===== REDUCE SPACE between match config sections (right sidebar) =====
-         The offline page uses mb-5 (20px) between sections like Match Type,
-         Your Color, Difficulty, Clock/Time Format. We reduce this to mb-2
-         (8px) so the buttons are closer together and the panel is more
-         compact — no more excessive gaps between sections. */
-      .grid.grid-cols-2.gap-2\.5.mb-5 { margin-bottom: 8px !important; }
-      .border.border-stone-200\/50.mb-5,
-      .border.border-stone-200\/50.dark\:border-stone-800\/50.mb-5 {
-        margin-bottom: 8px !important;
-      }
-      .flex.items-center.justify-between.mb-3 { margin-bottom: 6px !important; }
-
-      /* ===== HIDE all time-related buttons in the offline play page =====
-         The offline page has a "Clock / Time Format" section with buttons
-         like Bullet (1m), Blitz (3m), Rapid (10m), Classic (30m), Untimed.
-         We hide the entire section so the user can't see or change the
-         time control. The per-move timer override (in JS) handles all
-         timing — the time format buttons are no longer needed. */
-      .grid.grid-cols-2.sm\:grid-cols-4.md\:grid-cols-4.xl\:grid-cols-2.gap-1\.5 {
-        display: none !important;
-      }
-      /* Also hide the "Clock / Time Format:" label */
-      label:has(+ .grid.grid-cols-2.sm\:grid-cols-4) {
-        display: none !important;
-      }
-      /* Hide the label by its text content via a more specific selector */
-      .mb-5 > label.text-xs.font-bold.text-stone-600.mb-1\.5 {
-        display: none !important;
-      }
-      /* Hide the Rotate Board button's parent if it's in the same section
-         as the time format (we keep Rotate Board visible by NOT hiding
-         the parent — only the time-related children). */
-      /* The "mt-2" Rotate Board button stays visible. */
-
       /* ===== HIDE COORDINATES by default (both dark and light mode) =====
          The offline page shows edge numbers/letters on the board by default.
          We hide them via CSS so the board is clean by default, matching
@@ -183,170 +111,10 @@ Error generating stack: `+a.message+`
       span[class*="text-[9px]"][class*="font-bold"][class*="opacity"] {
         display: none !important;
       }
+
+      /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
-      }
-
-      /* ===== FOCUS MODE: perfectly symmetrical board spacing =====
-         The offline page's focus mode centers the board vertically using
-         flexbox, but the horizontal padding and max-width can make it
-         off-center. We override to ensure the board is perfectly centered
-         both horizontally and vertically with symmetrical margins. */
-      main[class*="min-h-screen flex items-center justify-center"] {
-        padding: 0 !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        min-height: 100vh !important;
-      }
-      main[class*="min-h-screen flex items-center justify-center"] > div {
-        width: 100% !important;
-        max-width: min(90vh, 700px) !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-      }
-      /* When in focus mode, the board container should be centered */
-      main[class*="min-h-screen flex items-center justify-center"] .chess-board-wrap,
-      main[class*="min-h-screen flex items-center justify-center"] [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
-        margin: 0 auto !important;
-        max-width: min(85vh, 650px) !important;
-      }
-
-      /* ===== COMPACT RIGHT SIDEBAR — tight, no unnecessary space =====
-         The offline page's right sidebar (Match Configuration) has panels
-         with excessive padding and margins. We make everything as compact
-         as possible — minimal padding, tight gaps, small fonts. */
-      /* Reduce padding on all panels in the right column */
-      .xl\:col-span-5 .bg-stone-50, .xl\:col-span-5 .bg-stone-900\/50,
-      .xl\:col-span-5 .bg-stone-900\/60, .xl\:col-span-5 .bg-stone-900\/70 {
-        padding: 8px 10px !important;
-        border-radius: 8px !important;
-        margin-bottom: 6px !important;
-      }
-      /* Tighter section headers */
-      .xl\:col-span-5 h3 {
-        margin-bottom: 4px !important;
-        font-size: 10px !important;
-      }
-      /* Compact buttons inside the right sidebar */
-      .xl\:col-span-5 button {
-        padding: 5px 8px !important;
-        font-size: 10px !important;
-      }
-      /* Reduce gap between right sidebar sections */
-      .xl\:col-span-5 > div {
-        margin-bottom: 4px !important;
-      }
-      .xl\:col-span-5 > div:last-child {
-        margin-bottom: 0 !important;
-      }
-      /* Make labels more compact */
-      .xl\:col-span-5 label {
-        font-size: 9px !important;
-        margin-bottom: 2px !important;
-      }
-      /* Reduce gap in grid layouts inside the sidebar */
-      .xl\:col-span-5 .grid {
-        gap: 4px !important;
-      }
-      /* Reduce the match config panel's own margin */
-      .xl\:col-span-5 {
-        gap: 4px !important;
-      }
-      /* Tighter flex layouts */
-      .xl\:col-span-5 .flex {
-        gap: 4px !important;
-      }
-
-      /* ===== SIMPLER OPENING ANIMATION for offline page =====
-         A clean fade-in for the board — no overlay, no slide.
-         Just a smooth opacity transition that feels professional. */
-      @keyframes offlineBoardFadeIn {
-        0%   { opacity: 0; }
-        100% { opacity: 1; }
-      }
-      .chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
-        animation: offlineBoardFadeIn 0.8s ease-out !important;
-      }
-
-      /* ===== WIN/LOSE VIBE ANIMATIONS (offline page) ===== */
-      .game-result-overlay {
-        position: fixed; inset: 0; z-index: 200;
-        display: flex; align-items: center; justify-content: center;
-        pointer-events: none; opacity: 0;
-        flex-direction: column;
-      }
-      .game-result-overlay.show { animation: resultFadeIn 0.5s ease-out forwards; }
-      @keyframes resultFadeIn { to { opacity: 1; } }
-      .result-icon { margin-bottom: 12px; opacity: 0.9; }
-      .game-result-overlay.win .result-icon { color: #fbbf24; animation: winPulse 2s ease-in-out infinite; }
-      .game-result-overlay.lose .result-icon { color: #fb7185; }
-      .game-result-overlay.draw .result-icon { color: #d6d3d1; }
-      .game-result-overlay.win {
-        background: radial-gradient(circle at center, rgba(245, 158, 11, 0.25) 0%, rgba(0, 0, 0, 0.6) 70%);
-      }
-      .game-result-overlay.win .result-text {
-        font-size: clamp(40px, 8vw, 72px); font-weight: 900;
-        background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
-        -webkit-background-clip: text; background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
-        animation: winPulse 2s ease-in-out infinite;
-      }
-      @keyframes winPulse {
-        0%, 100% { transform: scale(1); filter: brightness(1); }
-        50% { transform: scale(1.05); filter: brightness(1.2); }
-      }
-      .game-result-overlay.win .result-sub {
-        font-size: 16px; color: #fbbf24; margin-top: 12px;
-        text-transform: uppercase; letter-spacing: 0.2em;
-        animation: winSubFade 1s ease-out 0.5s both;
-      }
-      @keyframes winSubFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      .sparkle {
-        position: absolute; width: 6px; height: 6px;
-        background: #fbbf24; border-radius: 50%;
-        box-shadow: 0 0 10px #f59e0b;
-        animation: sparkleFloat 2s ease-out forwards;
-      }
-      @keyframes sparkleFloat {
-        0% { opacity: 1; transform: translateY(0) scale(1); }
-        100% { opacity: 0; transform: translateY(-120px) scale(0.3); }
-      }
-      .game-result-overlay.lose {
-        background: radial-gradient(circle at center, rgba(244, 63, 94, 0.2) 0%, rgba(0, 0, 0, 0.7) 70%);
-      }
-      .game-result-overlay.lose .result-text {
-        font-size: clamp(36px, 7vw, 64px); font-weight: 900;
-        color: #fb7185;
-        text-shadow: 0 0 30px rgba(244, 63, 94, 0.5);
-        animation: loseShake 0.6s ease-in-out;
-      }
-      @keyframes loseShake {
-        0%, 100% { transform: translateX(0); }
-        20% { transform: translateX(-8px); }
-        40% { transform: translateX(8px); }
-        60% { transform: translateX(-5px); }
-        80% { transform: translateX(5px); }
-      }
-      .game-result-overlay.lose .result-sub {
-        font-size: 16px; color: #fb7185; margin-top: 12px;
-        text-transform: uppercase; letter-spacing: 0.2em;
-        animation: loseSubFade 1s ease-out 0.6s both;
-      }
-      @keyframes loseSubFade { from { opacity: 0; } to { opacity: 0.8; } }
-      .game-result-overlay.draw {
-        background: radial-gradient(circle at center, rgba(168, 162, 158, 0.15) 0%, rgba(0, 0, 0, 0.6) 70%);
-      }
-      .game-result-overlay.draw .result-text {
-        font-size: clamp(36px, 7vw, 64px); font-weight: 900;
-        color: #d6d3d1;
-        animation: drawFadeIn 1s ease-out;
-      }
-      @keyframes drawFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-      .game-result-overlay.draw .result-sub {
-        font-size: 16px; color: #a8a29e; margin-top: 12px;
-        text-transform: uppercase; letter-spacing: 0.2em;
       }
     </style>
 
@@ -455,19 +223,13 @@ Error generating stack: `+a.message+`
         // ===== PER-MOVE TIMER (like the online page) =====
         try {
           var PER_MOVE_TIMER = {
-            // Fixed 15-minute per-move timer (time control buttons are hidden).
-            initialTimeSec: 15 * 60 * 1000 / 1000,  // 900 seconds = 15 minutes
+            initialTimeSec: 600,
             turnStartTime: null,
             lastActiveColor: null,
             overrideInterval: null,
             timedOut: false,
 
             readInitialTime: function() {
-              // Time control buttons are hidden via CSS, so we always use
-              // a fixed 15-minute per-move timer. This function is kept for
-              // compatibility but does nothing — the initialTimeSec is fixed.
-              // (If buttons become visible again in the future, this will
-              // auto-detect the selected time control.)
               try {
                 var buttons = document.querySelectorAll('button');
                 for (var i = 0; i < buttons.length; i++) {
@@ -561,7 +323,7 @@ Error generating stack: `+a.message+`
               if (this.timedOut) return;
               this.timedOut = true;
               var winner = flaggedColor === 'w' ? 'Black' : 'White';
-              alert('' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of time (per-move limit). ' + winner + ' wins!');
+              alert('⏱️ ' + (flaggedColor === 'w' ? 'White' : 'Black') + ' ran out of time (per-move limit). ' + winner + ' wins!');
             },
 
             init: function() {
@@ -584,123 +346,6 @@ Error generating stack: `+a.message+`
           }
         } catch (e) {
           console.warn('[Offline Overrides] Per-move timer failed:', e);
-        }
-
-        // ===== WIN/LOSE VIBE ANIMATION (offline page) =====
-        // Watches for game-over text (Checkmate, Stalemate, Draw, etc.) and
-        // shows a win/lose/draw animation overlay.
-        try {
-          var GAME_RESULT_WATCHER = {
-            lastResultShown: null,
-            checkInterval: null,
-            checkForResult: function() {
-              // Only check for game-over if we're actually IN a game (not on the
-              // splash screen or match config screen). We detect this by checking
-              // if the board has pieces on it (i.e., a game is in progress).
-              var board = document.querySelector('.chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"]');
-              if (!board) return;  // no board = not in a game yet
-              // Check if there's a visible game-over banner (not just any text).
-              // The offline page shows game-over text in a specific styled element
-              // with classes like "text-2xl" or "text-3xl" and amber/red color.
-              var gameOverEl = null;
-              var banners = document.querySelectorAll('[class*="text-2xl"], [class*="text-3xl"], [class*="text-xl"]');
-              for (var i = 0; i < banners.length; i++) {
-                var t = (banners[i].textContent || '').trim();
-                if (t.match(/checkmate|stalemate|draw by|insufficient|timeout|resigned|wins by/i)) {
-                  // Make sure this element is actually visible (not hidden)
-                  var rect = banners[i].getBoundingClientRect();
-                  if (rect.width > 0 && rect.height > 0) {
-                    gameOverEl = banners[i];
-                    break;
-                  }
-                }
-              }
-              if (!gameOverEl) {
-                // No game-over banner visible — reset
-                if (this.lastResultShown !== null) {
-                  this.lastResultShown = null;
-                  var existing = document.querySelector('.game-result-overlay');
-                  if (existing) existing.remove();
-                }
-                return;
-              }
-              // We have a visible game-over banner — determine result type
-              var text = gameOverEl.textContent || '';
-              var resultType = null;
-              // Check if it's MY win or MY loss (vs Computer: I'm always white
-              // if I chose white, or the player who isn't the AI)
-              if (/white wins|you win|victory/i.test(text)) resultType = 'win';
-              else if (/black wins|you lose|defeat/i.test(text)) resultType = 'lose';
-              else if (/draw|stalemate|insufficient|tie/i.test(text)) resultType = 'draw';
-              else if (/checkmate/i.test(text)) {
-                // "White Wins by Checkmate" or "Black Wins by Checkmate"
-                // Default: if white wins, player wins (assuming player is white)
-                if (/white wins/i.test(text)) resultType = 'win';
-                else if (/black wins/i.test(text)) resultType = 'lose';
-                else resultType = 'win'; // fallback
-              }
-              if (resultType && this.lastResultShown !== resultType) {
-                this.lastResultShown = resultType;
-                this.showResult(resultType);
-              }
-            },
-            showResult: function(type) {
-              var existing = document.querySelector('.game-result-overlay');
-              if (existing) existing.remove();
-              var title, sub, icon;
-              if (type === 'win') {
-                title = 'Victory!'; sub = 'You won the match';
-                icon = '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>';
-              } else if (type === 'lose') {
-                title = 'Defeat'; sub = 'Better luck next time';
-                icon = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>';
-              } else {
-                title = 'Draw'; sub = 'Well played';
-                icon = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12H3"></path><path d="M16 6H3"></path><path d="M16 18H3"></path><path d="M18 9v6"></path><path d="M21 12h-6"></path></svg>';
-              }
-              var overlay = document.createElement('div');
-              overlay.className = 'game-result-overlay ' + type;
-              overlay.innerHTML = '<div class="result-icon">' + icon + '</div><div class="result-text">' + title + '</div><div class="result-sub">' + sub + '</div>';
-              document.body.appendChild(overlay);
-              requestAnimationFrame(function() { overlay.classList.add('show'); });
-              if (type === 'win') {
-                for (var i = 0; i < 20; i++) {
-                  (function(idx) {
-                    setTimeout(function() {
-                      var sparkle = document.createElement('div');
-                      sparkle.className = 'sparkle';
-                      sparkle.style.left = (Math.random() * 100) + '%';
-                      sparkle.style.bottom = '40%';
-                      sparkle.style.animationDelay = (Math.random() * 0.5) + 's';
-                      overlay.appendChild(sparkle);
-                      setTimeout(function() { if (sparkle.parentNode) sparkle.remove(); }, 2500);
-                    }, idx * 80);
-                  })(i);
-                }
-              }
-              setTimeout(function() {
-                if (overlay.parentNode) {
-                  overlay.style.transition = 'opacity 0.5s';
-                  overlay.style.opacity = '0';
-                  setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 500);
-                }
-              }, 4000);
-            },
-            init: function() {
-              var self = this;
-              this.checkInterval = setInterval(function() { self.checkForResult(); }, 500);
-              console.log('[Offline Overrides] Win/lose animation watcher active');
-            }
-          };
-          if (document.readyState === 'complete') {
-            GAME_RESULT_WATCHER.init();
-          } else {
-            window.addEventListener('load', function() {
-              setTimeout(function() { GAME_RESULT_WATCHER.init(); }, 1000);
-            });
-          }
-        } catch (e) {
-          console.warn('[Offline Overrides] Win/lose animation failed:', e);
         }
 
         console.log('[Offline Overrides] All overrides loaded');
