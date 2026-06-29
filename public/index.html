@@ -1876,39 +1876,12 @@
 
       // ===== NEW: Render player cards (mine first, opponent after) =====
       function renderPlayerCards() {
+        // DISABLED: The two player cards (my card + opponent card) have been
+        // removed from the online play page per user request. This function
+        // is kept as a no-op so callers don't break, but it renders nothing.
         const container = document.getElementById("new-player-cards");
-        if (!container) return;
-        if (!onlineGameState || !onlineGameState.game) {
-          container.innerHTML = "";
-          return;
-        }
-        const g = onlineGameState.game;
-        const myColor = onlineGameState.myColor;
-        if (!myColor) {
-          container.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#a8a29e;font-size:12px;padding:8px;">Spectating</div>';
-          return;
-        }
-        // Sync the player cards' theme with the board theme so the avatar
-        // and color chip use the theme's light-square color (whole card matches).
-        container.dataset.cardTheme = currentBoardTheme || "classic";
-        const myName = myColor === "w" ? (g.whiteUsername || "You") : (g.blackUsername || "You");
-        const oppName = myColor === "w" ? (g.blackUsername || "Opponent") : (g.whiteUsername || "Opponent");
-        const myWins = (currentUser && currentUser.stats && currentUser.stats.wins) ? currentUser.stats.wins : 0;
-        const myLevel = levelFromWins(myWins);
-        const myStats = (currentUser && currentUser.stats) ? currentUser.stats : { wins: 0, losses: 0, draws: 0 };
-        // NOTE: avatar and color chip no longer have inline colors — they use
-        // CSS variables driven by data-card-theme so the whole card matches
-        // the selected board theme.
-        const cardHtml = (name, color, levelLabel, levelTone, stats, isMe) => '<div class="new-player-card">' +
-          '<div class="new-player-avatar">' + name[0].toUpperCase() + '</div>' +
-          '<div class="new-player-info">' +
-            '<div class="new-player-name">' + name + (isMe ? ' <span style="font-size:10px;color:#f59e0b;">(you)</span>' : "") + '</div>' +
-            '<div class="new-player-level">Level: <span class="lvl-tone-' + levelTone + '">' + levelLabel + '</span> · <span class="new-player-stats">' + stats.wins + 'W ' + stats.losses + 'L ' + stats.draws + 'D</span></div>' +
-          '</div>' +
-          '<span class="new-player-color-chip"><span class="swatch"></span>' + (color === "w" ? "White" : "Black") + '</span>' +
-        '</div>';
-        container.innerHTML = cardHtml(myName, myColor, myLevel.label, myLevel.tone, myStats, true) +
-          cardHtml(oppName, myColor === "w" ? "b" : "w", "Opponent", "beginner", { wins: 0, losses: 0, draws: 0 }, false);
+        if (container) container.innerHTML = "";
+        return;
       }
 
       // ===== NEW: Render lost pieces boxes =====
