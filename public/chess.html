@@ -75,6 +75,20 @@ Error generating stack: `+a.message+`
         border-bottom: 1px solid rgba(245, 158, 11, 0.12) !important;
         box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.3) !important;
       }
+      /* Topbar in LIGHT mode — warm cream background like the online page */
+      body.light header.sticky, body.light header[class*="sticky"],
+      body[class*="light"] header.sticky, body[class*="light"] header[class*="sticky"] {
+        background: rgba(255, 252, 247, 0.92) !important;
+        border-bottom: 1px solid #e2dccd !important;
+        box-shadow: 0 1px 0 rgba(245, 158, 11, 0.04), 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+      }
+      /* Topbar text color in light mode */
+      body.light header.sticky, body.light header[class*="sticky"],
+      body.light header.sticky *, body.light header[class*="sticky"] *,
+      body[class*="light"] header.sticky, body[class*="light"] header[class*="sticky"],
+      body[class*="light"] header.sticky *, body[class*="light"] header[class*="sticky"] * {
+        color: #1c1917 !important;
+      }
 
       /* ===== BOARD BORDER: dark mode matches theme light square ===== */
       .border-\[\#f0d9b5\] { border-color: #f0d9b5 !important; }
@@ -112,10 +126,9 @@ Error generating stack: `+a.message+`
         margin-bottom: 32px !important;
       }
 
-      /* Also add more gap between the sections below the board */
-      .bg-stone-900\/50, .bg-stone-900\/60, .bg-stone-900\/70, .bg-stone-900\/80 {
-        margin-bottom: 16px !important;
-      }
+      /* NOTE: Do NOT add margin-bottom to the right-side panels — that would
+         create unwanted extra space between the buttons/sections in the
+         right sidebar. The original gap between sections is preserved. */
 
       /* ===== Smooth transitions for theme changes ===== */
       [class*="border-4"][class*="transition-all"] {
