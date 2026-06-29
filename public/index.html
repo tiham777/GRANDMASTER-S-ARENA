@@ -881,17 +881,21 @@
       .outgoing-timer { font-size: 11px; color: #a8a29e; }
 
       /* ===== ONLINE GAME ROOM ===== */
-      /* ===== Online game container — matches offline page's amber glow ===== */
+      /* ===== Online game container =====
+         DARK MODE: pure dark background — no amber/golden glow.
+         The previous amber radial gradient has been removed per user request
+         for a cleaner, pure dark aesthetic. Only a subtle top vignette remains
+         for depth. Light mode keeps its warm cream glow (see below). */
       #online-game {
         max-width: 1100px; margin: 0 auto;
         padding: 12px 20px 24px;
-        background: radial-gradient(ellipse at 50% 45%, rgba(245, 158, 11, 0.18) 0%, rgba(15, 23, 42, 0) 60%), radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%);
+        background: radial-gradient(ellipse at top, #1c1917 0%, #0c0a09 70%);
         min-height: calc(100vh - 56px);
         position: relative;
       }
       #online-game::before {
         content: ""; position: absolute; inset: 0;
-        background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.12) 0%, transparent 50%);
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, transparent 30%);
         pointer-events: none;
       }
       #online-game > * { position: relative; z-index: 1; }
@@ -1072,6 +1076,77 @@
       }
       .chess-coord.rank { top: 2px; left: 4px; }
       .chess-coord.file { bottom: 2px; right: 4px; }
+      /* Hide coordinates when body has .no-coords class */
+      body.no-coords .chess-coord { display: none !important; }
+
+      /* Coordinates Grid toggle button */
+      .coords-toggle-btn {
+        padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.4);
+        background: rgba(245, 158, 11, 0.15); color: #fbbf24;
+        font-size: 11px; font-weight: 700; cursor: pointer;
+        transition: all 0.15s; min-width: 50px;
+      }
+      .coords-toggle-btn:hover {
+        background: rgba(245, 158, 11, 0.25); border-color: #f59e0b;
+      }
+      .coords-toggle-btn.off {
+        background: rgba(120, 113, 108, 0.15); color: #a8a29e; border-color: rgba(120, 113, 108, 0.3);
+      }
+      body.light-mode .coords-toggle-btn {
+        background: rgba(245, 158, 11, 0.12); color: #d97706; border-color: rgba(245, 158, 11, 0.4);
+      }
+      body.light-mode .coords-toggle-btn.off {
+        background: rgba(120, 113, 108, 0.1); color: #78716c; border-color: #d6cfc1;
+      }
+
+      /* ===== OPENING ANIMATION — plays when an online match starts =====
+         A simple, elegant fade-in + slide-up animation for the board.
+         The board container gets the .match-opening class, which triggers
+         a 1.2s animation: the board starts invisible and slightly below
+         its final position, then fades in and slides up smoothly. */
+      @keyframes matchOpening {
+        0%   { opacity: 0; transform: translateY(30px) scale(0.96); filter: blur(4px); }
+        60%  { opacity: 1; filter: blur(0); }
+        100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+      }
+      .match-opening .chess-board {
+        animation: matchOpening 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+      @keyframes matchOpeningPanels {
+        0%   { opacity: 0; transform: translateX(20px); }
+        100% { opacity: 1; transform: translateX(0); }
+      }
+      .match-opening .game-side-col {
+        animation: matchOpeningPanels 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+      }
+      /* "Match Starting" overlay — brief flash that fades out */
+      .match-start-overlay {
+        position: fixed; inset: 0; z-index: 90;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(12, 10, 9, 0.7); backdrop-filter: blur(4px);
+        pointer-events: none; opacity: 0;
+        animation: matchStartFlash 1.5s ease-out forwards;
+      }
+      @keyframes matchStartFlash {
+        0%   { opacity: 0; }
+        20%  { opacity: 1; }
+        80%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .match-start-text {
+        font-size: clamp(28px, 5vw, 48px); font-weight: 900;
+        letter-spacing: -0.02em;
+        background: linear-gradient(to right, #fde68a, #f59e0b, #d97706);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        animation: matchStartTextPulse 1.5s ease-out;
+      }
+      @keyframes matchStartTextPulse {
+        0%   { transform: scale(0.8); opacity: 0; }
+        30%  { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+      }
 
       .game-status {
         background: rgba(28, 25, 23, 0.8);
@@ -1767,6 +1842,14 @@
                   <span class="half" style="background:#fed7aa"></span><span class="half" style="background:#9a3412"></span>
                 </button>
               </div>
+            </div>
+
+            <!-- Coordinates Grid toggle (show/hide edge numbers and letters) -->
+            <div class="new-board-picker" id="new-coords-toggle" style="justify-content: space-between;">
+              <span class="new-board-picker-label">🔢 Coordinates Grid</span>
+              <button id="btn-toggle-coords" class="coords-toggle-btn" title="Show/hide edge numbers and letters">
+                <span class="coords-toggle-text">ON</span>
+              </button>
             </div>
 
             <!-- Per-move timer (15 min per move, resets every turn) -->
@@ -3074,6 +3157,29 @@
         document.getElementById("lobby").classList.add("hidden");
         document.getElementById("online-game").classList.remove("hidden");
 
+        // ===== OPENING ANIMATION — plays when the match starts =====
+        // Add the .match-opening class to trigger the board fade-in + slide-up,
+        // and show a brief "Match Starting" overlay that fades out.
+        const onlineGameEl = document.getElementById("online-game");
+        if (onlineGameEl) {
+          // Remove the class first (in case we're re-joining a game), then
+          // re-add it on the next frame so the animation replays.
+          onlineGameEl.classList.remove("match-opening");
+          void onlineGameEl.offsetWidth;  // force reflow to restart animation
+          onlineGameEl.classList.add("match-opening");
+          // Remove the class after the animation finishes (1.5s) so it
+          // doesn't interfere with subsequent renders.
+          setTimeout(() => {
+            onlineGameEl.classList.remove("match-opening");
+          }, 1600);
+        }
+        // Show the "Match Starting" overlay
+        const overlay = document.createElement("div");
+        overlay.className = "match-start-overlay";
+        overlay.innerHTML = '<div class="match-start-text">⚔️ Match Starting</div>';
+        document.body.appendChild(overlay);
+        setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 1600);
+
         const { db, doc, onSnapshot, collection, query, orderBy } = window.fb;
         // ===== FIX: wrap new Chess() so a missing library surfaces a clear error instead of a blank board.
         let initialChess;
@@ -3679,6 +3785,28 @@
             renderPlayerCards();
           });
         });
+
+        // Coordinates Grid toggle — show/hide edge numbers and letters
+        const btnCoords = document.getElementById("btn-toggle-coords");
+        if (btnCoords) {
+          // Load saved preference (default: coordinates ON)
+          let coordsOn = true;
+          try {
+            const saved = localStorage.getItem("chess-coords-on");
+            if (saved !== null) coordsOn = (saved === "1");
+          } catch (_) {}
+          // Apply initial state
+          document.body.classList.toggle("no-coords", !coordsOn);
+          btnCoords.classList.toggle("off", !coordsOn);
+          btnCoords.querySelector(".coords-toggle-text").textContent = coordsOn ? "ON" : "OFF";
+          btnCoords.addEventListener("click", () => {
+            coordsOn = !coordsOn;
+            document.body.classList.toggle("no-coords", !coordsOn);
+            btnCoords.classList.toggle("off", !coordsOn);
+            btnCoords.querySelector(".coords-toggle-text").textContent = coordsOn ? "ON" : "OFF";
+            try { localStorage.setItem("chess-coords-on", coordsOn ? "1" : "0"); } catch (_) {}
+          });
+        }
       })();
 
       async function resignGame() {
