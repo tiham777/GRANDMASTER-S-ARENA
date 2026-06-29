@@ -179,6 +179,93 @@ Error generating stack: `+a.message+`
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
       }
+
+      /* ===== SIMPLER OPENING ANIMATION for offline page =====
+         A clean fade-in for the board — no overlay, no slide.
+         Just a smooth opacity transition that feels professional. */
+      @keyframes offlineBoardFadeIn {
+        0%   { opacity: 0; }
+        100% { opacity: 1; }
+      }
+      .chess-board-wrap, [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
+        animation: offlineBoardFadeIn 0.8s ease-out !important;
+      }
+
+      /* ===== WIN/LOSE VIBE ANIMATIONS (offline page) ===== */
+      .game-result-overlay {
+        position: fixed; inset: 0; z-index: 200;
+        display: flex; align-items: center; justify-content: center;
+        pointer-events: none; opacity: 0;
+        flex-direction: column;
+      }
+      .game-result-overlay.show { animation: resultFadeIn 0.5s ease-out forwards; }
+      @keyframes resultFadeIn { to { opacity: 1; } }
+      .game-result-overlay.win {
+        background: radial-gradient(circle at center, rgba(245, 158, 11, 0.25) 0%, rgba(0, 0, 0, 0.6) 70%);
+      }
+      .game-result-overlay.win .result-text {
+        font-size: clamp(40px, 8vw, 72px); font-weight: 900;
+        background: linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
+        animation: winPulse 2s ease-in-out infinite;
+      }
+      @keyframes winPulse {
+        0%, 100% { transform: scale(1); filter: brightness(1); }
+        50% { transform: scale(1.05); filter: brightness(1.2); }
+      }
+      .game-result-overlay.win .result-sub {
+        font-size: 16px; color: #fbbf24; margin-top: 12px;
+        text-transform: uppercase; letter-spacing: 0.2em;
+        animation: winSubFade 1s ease-out 0.5s both;
+      }
+      @keyframes winSubFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .sparkle {
+        position: absolute; width: 6px; height: 6px;
+        background: #fbbf24; border-radius: 50%;
+        box-shadow: 0 0 10px #f59e0b;
+        animation: sparkleFloat 2s ease-out forwards;
+      }
+      @keyframes sparkleFloat {
+        0% { opacity: 1; transform: translateY(0) scale(1); }
+        100% { opacity: 0; transform: translateY(-120px) scale(0.3); }
+      }
+      .game-result-overlay.lose {
+        background: radial-gradient(circle at center, rgba(244, 63, 94, 0.2) 0%, rgba(0, 0, 0, 0.7) 70%);
+      }
+      .game-result-overlay.lose .result-text {
+        font-size: clamp(36px, 7vw, 64px); font-weight: 900;
+        color: #fb7185;
+        text-shadow: 0 0 30px rgba(244, 63, 94, 0.5);
+        animation: loseShake 0.6s ease-in-out;
+      }
+      @keyframes loseShake {
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-8px); }
+        40% { transform: translateX(8px); }
+        60% { transform: translateX(-5px); }
+        80% { transform: translateX(5px); }
+      }
+      .game-result-overlay.lose .result-sub {
+        font-size: 16px; color: #fb7185; margin-top: 12px;
+        text-transform: uppercase; letter-spacing: 0.2em;
+        animation: loseSubFade 1s ease-out 0.6s both;
+      }
+      @keyframes loseSubFade { from { opacity: 0; } to { opacity: 0.8; } }
+      .game-result-overlay.draw {
+        background: radial-gradient(circle at center, rgba(168, 162, 158, 0.15) 0%, rgba(0, 0, 0, 0.6) 70%);
+      }
+      .game-result-overlay.draw .result-text {
+        font-size: clamp(36px, 7vw, 64px); font-weight: 900;
+        color: #d6d3d1;
+        animation: drawFadeIn 1s ease-out;
+      }
+      @keyframes drawFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+      .game-result-overlay.draw .result-sub {
+        font-size: 16px; color: #a8a29e; margin-top: 12px;
+        text-transform: uppercase; letter-spacing: 0.2em;
+      }
     </style>
 
   </head>
@@ -415,6 +502,93 @@ Error generating stack: `+a.message+`
           }
         } catch (e) {
           console.warn('[Offline Overrides] Per-move timer failed:', e);
+        }
+
+        // ===== WIN/LOSE VIBE ANIMATION (offline page) =====
+        // Watches for game-over text (Checkmate, Stalemate, Draw, etc.) and
+        // shows a win/lose/draw animation overlay.
+        try {
+          var GAME_RESULT_WATCHER = {
+            lastResultShown: null,
+            checkInterval: null,
+            checkForResult: function() {
+              var body = document.body;
+              var text = body.innerText || body.textContent || '';
+              var isGameOver = false;
+              var resultType = null;
+              if (/checkmate/i.test(text) && /won|wins|victory/i.test(text)) {
+                isGameOver = true;
+                if (/you won|you win|victory/i.test(text)) resultType = 'win';
+                else if (/you lost|you lose|defeat/i.test(text)) resultType = 'lose';
+                else resultType = 'win';
+              } else if (/stalemate|draw|tie/i.test(text)) {
+                isGameOver = true;
+                resultType = 'draw';
+              } else if (/resign|resigned/i.test(text) && /you|game over/i.test(text)) {
+                isGameOver = true;
+                if (/you resigned/i.test(text)) resultType = 'lose';
+                else resultType = 'win';
+              }
+              if (isGameOver && resultType && this.lastResultShown !== resultType) {
+                this.lastResultShown = resultType;
+                this.showResult(resultType);
+              }
+              if (!isGameOver && this.lastResultShown !== null) {
+                this.lastResultShown = null;
+                var existing = document.querySelector('.game-result-overlay');
+                if (existing) existing.remove();
+              }
+            },
+            showResult: function(type) {
+              var existing = document.querySelector('.game-result-overlay');
+              if (existing) existing.remove();
+              var title, sub;
+              if (type === 'win') { title = '🏆 Victory!'; sub = 'You won the match'; }
+              else if (type === 'lose') { title = '💀 Defeat'; sub = 'Better luck next time'; }
+              else { title = '🤝 Draw'; sub = 'Well played'; }
+              var overlay = document.createElement('div');
+              overlay.className = 'game-result-overlay ' + type;
+              overlay.innerHTML = '<div class="result-text">' + title + '</div><div class="result-sub">' + sub + '</div>';
+              document.body.appendChild(overlay);
+              requestAnimationFrame(function() { overlay.classList.add('show'); });
+              if (type === 'win') {
+                for (var i = 0; i < 20; i++) {
+                  (function(idx) {
+                    setTimeout(function() {
+                      var sparkle = document.createElement('div');
+                      sparkle.className = 'sparkle';
+                      sparkle.style.left = (Math.random() * 100) + '%';
+                      sparkle.style.bottom = '40%';
+                      sparkle.style.animationDelay = (Math.random() * 0.5) + 's';
+                      overlay.appendChild(sparkle);
+                      setTimeout(function() { if (sparkle.parentNode) sparkle.remove(); }, 2500);
+                    }, idx * 80);
+                  })(i);
+                }
+              }
+              setTimeout(function() {
+                if (overlay.parentNode) {
+                  overlay.style.transition = 'opacity 0.5s';
+                  overlay.style.opacity = '0';
+                  setTimeout(function() { if (overlay.parentNode) overlay.remove(); }, 500);
+                }
+              }, 4000);
+            },
+            init: function() {
+              var self = this;
+              this.checkInterval = setInterval(function() { self.checkForResult(); }, 500);
+              console.log('[Offline Overrides] Win/lose animation watcher active');
+            }
+          };
+          if (document.readyState === 'complete') {
+            GAME_RESULT_WATCHER.init();
+          } else {
+            window.addEventListener('load', function() {
+              setTimeout(function() { GAME_RESULT_WATCHER.init(); }, 1000);
+            });
+          }
+        } catch (e) {
+          console.warn('[Offline Overrides] Win/lose animation failed:', e);
         }
 
         console.log('[Offline Overrides] All overrides loaded');
