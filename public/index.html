@@ -2271,17 +2271,16 @@
  }, 3200);
  })();
 
- // ===== BACKGROUND MUSIC (BGM) — CHESS WAR BATTLE vibe =====
- // Epic orchestral + electronic hybrid battle music:
- //   - Orchestral string section (tremolo strings + sustained cello)
- //   - War timpani drums (deep, resonant booms)
- //   - Brass section (French horn fanfares)
- //   - Electronic sub-bass (modern tension under orchestra)
- //   - Snare drum rolls (military march)
- //   - Dramatic build → climax → resolution structure
- // Key: D minor (the classic war key). Controlled by sound button.
+ // ===== BACKGROUND MUSIC (BGM) — elegant chess lounge =====
+ // Sophisticated, contemplative music designed specifically for chess:
+ //   - Soft piano-like melody (triangle wave with gentle envelope)
+ //   - Warm ambient pad (detuned sawtooth, slow attack)
+ //   - Deep sub-bass drone (grounding, calm)
+ //   - Gentle chimes/bells (spacious accents)
+ // Key: C major (open, warm, intellectual). 120 BPM.
+ // 32-step loop = 16 seconds. Controlled by sound button. Default: ON.
  const ChessBGM = {
-   ctx: null, master: null, strBus: null, drumBus: null, brassBus: null, subBus: null,
+   ctx: null, master: null, pianoBus: null, padBus: null, bassBus: null, chimeBus: null,
    playing: false, enabled: true, stepTimer: null, step: 0,
 
    init() {
@@ -2291,246 +2290,153 @@
        this.ctx = new Ctx();
        this.master = this.ctx.createGain();
        this.master.gain.value = 0;
-       // Large hall reverb via feedback delay
+       // Soft reverb for spaciousness
        const delay = this.ctx.createDelay(2);
-       delay.delayTime.value = 0.6;
+       delay.delayTime.value = 0.45;
        const delayFb = this.ctx.createGain();
-       delayFb.gain.value = 0.45;
+       delayFb.gain.value = 0.35;
        const delayWet = this.ctx.createGain();
-       delayWet.gain.value = 0.35;
+       delayWet.gain.value = 0.3;
        this.master.connect(this.ctx.destination);
        this.master.connect(delay);
        delay.connect(delayFb); delayFb.connect(delay);
        delay.connect(delayWet); delayWet.connect(this.ctx.destination);
-       // Sub-buses with character filters
-       this.strBus = this.ctx.createGain(); this.strBus.gain.value = 0.35;
-       this.drumBus = this.ctx.createGain(); this.drumBus.gain.value = 0.6;
-       this.brassBus = this.ctx.createGain(); this.brassBus.gain.value = 0.25;
-       this.subBus = this.ctx.createGain(); this.subBus.gain.value = 0.5;
-       // Strings — lowpass for warm orchestral tone
-       const strLP = this.ctx.createBiquadFilter();
-       strLP.type = 'lowpass'; strLP.frequency.value = 2000; strLP.Q.value = 0.5;
-       this.strBus.connect(strLP); strLP.connect(this.master);
-       // Drums — no filter (raw impact)
-       this.drumBus.connect(this.master);
-       // Brass — bandpass for horn-like tone
-       const brassBP = this.ctx.createBiquadFilter();
-       brassBP.type = 'bandpass'; brassBP.frequency.value = 600; brassBP.Q.value = 1.2;
-       this.brassBus.connect(brassBP); brassBP.connect(this.master);
-       // Sub-bass — lowpass for sub frequencies
-       const subLP = this.ctx.createBiquadFilter();
-       subLP.type = 'lowpass'; subLP.frequency.value = 150; subLP.Q.value = 1;
-       this.subBus.connect(subLP); subLP.connect(this.master);
+       // Sub-buses
+       this.pianoBus = this.ctx.createGain(); this.pianoBus.gain.value = 0.35;
+       this.padBus = this.ctx.createGain(); this.padBus.gain.value = 0.2;
+       this.bassBus = this.ctx.createGain(); this.bassBus.gain.value = 0.4;
+       this.chimeBus = this.ctx.createGain(); this.chimeBus.gain.value = 0.15;
+       // Piano — gentle lowpass for soft tone
+       const pianoLP = this.ctx.createBiquadFilter();
+       pianoLP.type = 'lowpass'; pianoLP.frequency.value = 3000; pianoLP.Q.value = 0.5;
+       this.pianoBus.connect(pianoLP); pianoLP.connect(this.master);
+       // Pad — warm lowpass
+       const padLP = this.ctx.createBiquadFilter();
+       padLP.type = 'lowpass'; padLP.frequency.value = 1500; padLP.Q.value = 0.5;
+       this.padBus.connect(padLP); padLP.connect(this.master);
+       // Bass — deep lowpass
+       const bassLP = this.ctx.createBiquadFilter();
+       bassLP.type = 'lowpass'; bassLP.frequency.value = 200; bassLP.Q.value = 0.5;
+       this.bassBus.connect(bassLP); bassLP.connect(this.master);
+       // Chimes — bright bandpass
+       const chimeBP = this.ctx.createBiquadFilter();
+       chimeBP.type = 'bandpass'; chimeBP.frequency.value = 3000; chimeBP.Q.value = 1;
+       this.chimeBus.connect(chimeBP); chimeBP.connect(this.master);
      } catch (e) { console.warn('BGM init failed', e); }
    },
 
-   // Timpani — deep resonant drum (sine + noise + resonance)
-   playTimpani(time, gain, pitch) {
+   // Piano note — triangle wave with natural decay (like a felted piano)
+   playPiano(freq, time, dur, gain) {
      if (!this.ctx) return;
-     pitch = pitch || 110; // A2 default
-     // Body — sine with pitch drop
      const osc = this.ctx.createOscillator();
-     osc.type = 'sine';
-     osc.frequency.setValueAtTime(pitch * 1.5, time);
-     osc.frequency.exponentialRampToValueAtTime(pitch, time + 0.08);
-     const og = this.ctx.createGain();
-     og.gain.setValueAtTime(gain, time);
-     og.gain.exponentialRampToValueAtTime(0.001, time + 0.6);
-     osc.connect(og); og.connect(this.drumBus);
-     osc.start(time); osc.stop(time + 0.7);
-     // Resonance — second harmonic
+     osc.type = 'triangle';
+     osc.frequency.value = freq;
+     // Second harmonic for richness
      const osc2 = this.ctx.createOscillator();
      osc2.type = 'sine';
-     osc2.frequency.value = pitch * 2;
-     const og2 = this.ctx.createGain();
-     og2.gain.setValueAtTime(gain * 0.3, time);
-     og2.gain.exponentialRampToValueAtTime(0.001, time + 0.3);
-     osc2.connect(og2); og2.connect(this.drumBus);
-     osc2.start(time); osc2.stop(time + 0.4);
-     // Impact noise
-     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
-     const data = buf.getChannelData(0);
-     for (let i = 0; i < data.length; i++) {
-       data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
-     }
-     const noise = this.ctx.createBufferSource();
-     noise.buffer = buf;
-     const nf = this.ctx.createBiquadFilter();
-     nf.type = 'lowpass'; nf.frequency.value = 300;
-     const ng = this.ctx.createGain();
-     ng.gain.setValueAtTime(gain * 0.3, time);
-     ng.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
-     noise.connect(nf); nf.connect(ng); ng.connect(this.drumBus);
-     noise.start(time); noise.stop(time + 0.06);
-   },
-
-   // Snare roll — military marching snare
-   playSnare(time, gain) {
-     if (!this.ctx) return;
-     const buf = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.06, this.ctx.sampleRate);
-     const data = buf.getChannelData(0);
-     for (let i = 0; i < data.length; i++) {
-       data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 2);
-     }
-     const noise = this.ctx.createBufferSource();
-     noise.buffer = buf;
-     const nf = this.ctx.createBiquadFilter();
-     nf.type = 'highpass'; nf.frequency.value = 1500;
+     osc2.frequency.value = freq * 2;
      const g = this.ctx.createGain();
-     g.gain.setValueAtTime(gain, time);
-     g.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-     noise.connect(nf); nf.connect(g); g.connect(this.drumBus);
-     noise.start(time); noise.stop(time + 0.08);
+     g.gain.setValueAtTime(0, time);
+     g.gain.linearRampToValueAtTime(gain, time + 0.005); // instant attack
+     g.gain.exponentialRampToValueAtTime(gain * 0.3, time + 0.3); // fast decay
+     g.gain.exponentialRampToValueAtTime(0.001, time + dur); // long tail
+     const g2 = this.ctx.createGain();
+     g2.gain.setValueAtTime(0, time);
+     g2.gain.linearRampToValueAtTime(gain * 0.15, time + 0.005);
+     g2.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.5);
+     osc.connect(g); g.connect(this.pianoBus);
+     osc2.connect(g2); g2.connect(this.pianoBus);
+     osc.start(time); osc.stop(time + dur + 0.1);
+     osc2.start(time); osc2.stop(time + dur + 0.1);
    },
 
-   // String note — sawtooth with slow attack (orchestral string section)
-   playString(freq, time, dur, gain) {
+   // Pad note — detuned sawtooth ensemble with very slow attack
+   playPad(freq, time, dur, gain) {
      if (!this.ctx) return;
-     // Two detuned oscillators for richness (ensemble effect)
-     [0, 7].forEach(detune => {
+     [-5, 0, 5].forEach(detune => {
        const osc = this.ctx.createOscillator();
        osc.type = 'sawtooth';
        osc.frequency.value = freq;
        osc.detune.value = detune;
        const g = this.ctx.createGain();
        g.gain.setValueAtTime(0, time);
-       g.gain.linearRampToValueAtTime(gain, time + 0.4); // slow attack = string bow
-       g.gain.linearRampToValueAtTime(gain * 0.7, time + dur * 0.6);
+       g.gain.linearRampToValueAtTime(gain, time + 1); // very slow attack
+       g.gain.linearRampToValueAtTime(gain * 0.8, time + dur * 0.5);
        g.gain.linearRampToValueAtTime(0, time + dur);
-       osc.connect(g); g.connect(this.strBus);
+       osc.connect(g); g.connect(this.padBus);
        osc.start(time); osc.stop(time + dur + 0.1);
      });
    },
 
-   // Tremolo string — rapid amplitude modulation (tension effect)
-   playTremolo(freq, time, dur, gain) {
-     if (!this.ctx) return;
-     const osc = this.ctx.createOscillator();
-     osc.type = 'sawtooth';
-     osc.frequency.value = freq;
-     const g = this.ctx.createGain();
-     g.gain.value = 0;
-     // Tremolo via LFO
-     const lfo = this.ctx.createOscillator();
-     lfo.frequency.value = 8; // 8Hz tremolo
-     const lfoGain = this.ctx.createGain();
-     lfoGain.gain.value = gain * 0.5;
-     lfo.connect(lfoGain); lfoGain.connect(g.gain);
-     g.gain.setValueAtTime(gain * 0.5, time);
-     g.gain.linearRampToValueAtTime(0, time + dur);
-     osc.connect(g); g.connect(this.strBus);
-     osc.start(time); osc.stop(time + dur + 0.1);
-     lfo.start(time); lfo.stop(time + dur + 0.1);
-   },
-
-   // Brass — French horn (sawtooth + slow attack + vibrato)
-   playBrass(freq, time, dur, gain) {
-     if (!this.ctx) return;
-     const osc = this.ctx.createOscillator();
-     osc.type = 'sawtooth';
-     osc.frequency.value = freq;
-     // Vibrato
-     const lfo = this.ctx.createOscillator();
-     lfo.frequency.value = 4.5;
-     const lfoGain = this.ctx.createGain();
-     lfoGain.gain.value = 2;
-     lfo.connect(lfoGain); lfoGain.connect(osc.frequency);
-     const g = this.ctx.createGain();
-     g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + 0.15); // brass attack
-     g.gain.linearRampToValueAtTime(gain * 0.85, time + dur * 0.6);
-     g.gain.linearRampToValueAtTime(0, time + dur);
-     osc.connect(g); g.connect(this.brassBus);
-     osc.start(time); osc.stop(time + dur + 0.1);
-     lfo.start(time); lfo.stop(time + dur + 0.1);
-   },
-
-   // Sub-bass — electronic drone under orchestra
-   playSub(freq, time, dur, gain) {
+   // Bass — deep sine drone
+   playBass(freq, time, dur, gain) {
      if (!this.ctx) return;
      const osc = this.ctx.createOscillator();
      osc.type = 'sine';
      osc.frequency.value = freq;
      const g = this.ctx.createGain();
      g.gain.setValueAtTime(0, time);
-     g.gain.linearRampToValueAtTime(gain, time + 0.2);
-     g.gain.linearRampToValueAtTime(gain * 0.8, time + dur * 0.7);
+     g.gain.linearRampToValueAtTime(gain, time + 0.3);
+     g.gain.linearRampToValueAtTime(gain * 0.7, time + dur * 0.7);
      g.gain.linearRampToValueAtTime(0, time + dur);
-     osc.connect(g); g.connect(this.subBus);
+     osc.connect(g); g.connect(this.bassBus);
      osc.start(time); osc.stop(time + dur + 0.1);
    },
 
-   // 32-step loop (16 seconds). Key: D minor.
-   // Structure: Intro (0-7) → Build (8-15) → Climax (16-23) → Resolution (24-31)
-   // D minor scale: D E F G A Bb C
-   // Chord progression: Dm → Bb → F → C (i → VI → III → VII — epic war progression)
+   // Chime — high sine bell
+   playChime(freq, time, dur, gain) {
+     if (!this.ctx) return;
+     const osc = this.ctx.createOscillator();
+     osc.type = 'sine';
+     osc.frequency.value = freq;
+     const g = this.ctx.createGain();
+     g.gain.setValueAtTime(0, time);
+     g.gain.linearRampToValueAtTime(gain, time + 0.01);
+     g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+     osc.connect(g); g.connect(this.chimeBus);
+     osc.start(time); osc.stop(time + dur + 0.1);
+   },
+
+   // 32-step loop (16 seconds). Key: C major.
+   // Chord progression: C → Am → F → G (I → vi → IV → V — warm, familiar, contemplative)
+   // Each chord lasts 8 steps (4 seconds)
    chords: [
-     { root: 73.42, notes: [73.42, 110, 146.83], name: 'Dm' },     // D2, A2, D3
-     { root: 58.27, notes: [58.27, 87.31, 116.54], name: 'Bb' },  // Bb1, F2, Bb2
-     { root: 87.31, notes: [87.31, 130.81, 174.61], name: 'F' },   // F2, C3, F3
-     { root: 65.41, notes: [65.41, 98, 130.81], name: 'C' },       // C2, G2, C3
+     { bass: 65.41, pad: [130.81, 164.81, 196], name: 'C' },   // C2, C3, E3, G3
+     { bass: 55, pad: [110, 130.81, 164.81], name: 'Am' },     // A1, A2, C3, E3
+     { bass: 43.65, pad: [87.31, 130.81, 174.61], name: 'F' }, // F1, F2, C3, F3
+     { bass: 49, pad: [98, 123.47, 146.83], name: 'G' },       // G1, G2, B2, D3
    ],
-   // Melody (D minor) — epic war theme
-   melody: [293.66, 349.23, 440, 349.23, 293.66, 261.63, 293.66, 349.23],
+   // Piano melody — C major scale, contemplative pattern
+   // C4 D4 E4 G4 A4 G4 E4 D4 C4 E4 G4 C5 A4 G4 E4 C4
+   melody: [261.63, 293.66, 329.63, 392, 440, 392, 329.63, 293.66,
+            261.63, 329.63, 392, 523.25, 440, 392, 329.63, 261.63],
+   // Which steps the melody plays on (sparse — not every step)
+   melodySteps: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+   // Chime accents — on steps 4, 12, 20, 28 (once per chord, on the 3rd beat)
+   chimeNotes: [523.25, 440, 349.23, 392],
 
    playStep() {
      if (!this.ctx || !this.enabled) return;
      const now = this.ctx.currentTime;
      const s = this.step;
-     const phase = Math.floor(s / 8); // 0=intro, 1=build, 2=climax, 3=resolution
      const chordIdx = Math.floor(s / 8) % 4;
      const chord = this.chords[chordIdx];
-     // Timpani — war march on every 2 steps (quarter notes)
+     // Pad + bass — at start of each chord (every 8 steps = 4 seconds)
+     if (s % 8 === 0) {
+       chord.pad.forEach(freq => this.playPad(freq, now, 4.5, 0.025));
+       this.playBass(chord.bass, now, 4.5, 0.08);
+     }
+     // Piano melody — one note per 2 steps (every 1 second)
      if (s % 2 === 0) {
-       const drumGain = phase >= 2 ? 0.5 : (phase >= 1 ? 0.35 : 0.2);
-       this.playTimpani(now, drumGain, chord.root);
+       const melIdx = (s / 2) % 16;
+       this.playPiano(this.melody[melIdx], now, 1.2, 0.06);
      }
-     // Snare — on offbeats during build and climax
-     if (phase >= 1 && s % 2 === 1) {
-       this.playSnare(now, phase >= 2 ? 0.12 : 0.08);
-     }
-     // Snare roll — before climax (step 14) and before resolution (step 30)
-     if (s === 14 || s === 30) {
-       for (let i = 0; i < 4; i++) {
-         this.playSnare(now + i * 0.06, 0.1);
-       }
-     }
-     // Strings — sustained chord at start of each phase (every 8 steps)
-     if (s % 8 === 0) {
-       chord.notes.forEach(freq => {
-         this.playString(freq, now, 4.5, phase >= 2 ? 0.05 : 0.035);
-       });
-     }
-     // Tremolo strings — during build and climax (tension)
-     if (phase >= 1 && phase <= 2 && s % 4 === 2) {
-       this.playTremolo(chord.notes[2] * 2, now, 1.5, 0.025);
-     }
-     // Brass fanfare — at start of build (step 8) and climax (step 16)
-     if (s === 8) {
-       // Rising fanfare: D4 → F4 → A4
-       this.playBrass(293.66, now, 1, 0.07);
-       this.playBrass(349.23, now + 0.5, 1, 0.06);
-       this.playBrass(440, now + 1, 1.5, 0.08);
-     }
-     if (s === 16) {
-       // Epic fanfare: A4 → D5 (the war cry)
-       this.playBrass(440, now, 1, 0.09);
-       this.playBrass(587.33, now + 0.5, 2, 0.1);
-     }
-     if (s === 24) {
-       // Resolution fanfare: D4 → A4 → D5 (victory)
-       this.playBrass(293.66, now, 0.8, 0.07);
-       this.playBrass(440, now + 0.4, 0.8, 0.07);
-       this.playBrass(587.33, now + 0.8, 2, 0.09);
-     }
-     // Melody — plays during intro and resolution (contemplative phases)
-     if ((phase === 0 || phase === 3) && s % 2 === 0) {
-       const melIdx = (s / 2) % 8;
-       this.playString(this.melody[melIdx] * 2, now, 0.9, 0.025);
-     }
-     // Sub-bass drone — continuous under everything
-     if (s % 8 === 0) {
-       this.playSub(chord.root / 2, now, 4.5, 0.08);
+     // Chime accent — on step 4 of each chord
+     if (s % 8 === 4) {
+       const chimeIdx = Math.floor(s / 8) % 4;
+       this.playChime(this.chimeNotes[chimeIdx], now, 2, 0.02);
+       // Soft echo chime
+       this.playChime(this.chimeNotes[chimeIdx] * 1.5, now + 0.5, 1.5, 0.01);
      }
      this.step = (this.step + 1) % 32;
    },
@@ -2544,9 +2450,9 @@
      this.step = 0;
      this.master.gain.cancelScheduledValues(this.ctx.currentTime);
      this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.7 : 0, this.ctx.currentTime + 3);
+     this.master.gain.linearRampToValueAtTime(this.enabled ? 0.5 : 0, this.ctx.currentTime + 3);
      this.playStep();
-     this.stepTimer = setInterval(() => this.playStep(), 500); // 500ms = 120bpm quarter notes
+     this.stepTimer = setInterval(() => this.playStep(), 500);
    },
 
    stop() {
@@ -2564,7 +2470,7 @@
      if (this.master && this.ctx) {
        this.master.gain.cancelScheduledValues(this.ctx.currentTime);
        this.master.gain.setValueAtTime(this.master.gain.value, this.ctx.currentTime);
-       this.master.gain.linearRampToValueAtTime(on ? 0.7 : 0, this.ctx.currentTime + 0.5);
+       this.master.gain.linearRampToValueAtTime(on ? 0.5 : 0, this.ctx.currentTime + 0.5);
      }
    }
  };
