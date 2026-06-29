@@ -916,7 +916,7 @@
       }
       .game-board-col .player-bar { width: 100%; max-width: 560px; margin: 0; }
       .game-side-col {
-        display: flex; flex-direction: column; gap: 16px;
+        display: flex; flex-direction: column; gap: 8px;
         min-width: 0;
       }
 
@@ -3251,6 +3251,18 @@
               else ChessSound.playDefeat();
             } catch (e) { console.warn('End-game sound failed', e); }
           }
+          // ===== REMATCH: if the rematch was accepted, auto-join the new game =====
+          // This handles the case where I requested the rematch — the opponent
+          // accepted it (creating a new game), and I need to redirect to it.
+          if (g.rematchAccepted && g.rematchGameId && g.rematchBy === currentUser.uid) {
+            const newGameId = g.rematchGameId;
+            // Prevent double-join: only redirect if we're not already in the new game
+            if (activeGameId !== newGameId) {
+              console.log("[Rematch] Opponent accepted — joining new game:", newGameId);
+              joinOnlineGame(newGameId);
+              return;  // skip renderOnlineGame — we're switching games
+            }
+          }
           renderOnlineGame();
         }, (err) => {
           console.error("Game doc listener error:", err);
@@ -3411,13 +3423,43 @@
           <div class="game-actions">
             ${g.status === "active" ? `<button class="btn-action danger" id="btn-resign">🏳️ Resign</button>` : ""}
             ${g.status === "finished" ? `<button class="btn-action primary" id="btn-home">← Back to Lobby</button>` : ""}
+            ${g.status === "finished" ? `<button class="btn-action" id="btn-rematch" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.4);color:#fbbf24;">⚔️ Rematch</button>` : ""}
           </div>
+          <div id="rematch-status" style="margin-top:8px;font-size:12px;color:#a8a29e;"></div>
         `;
         if (g.status === "active") {
           document.getElementById("btn-resign").addEventListener("click", resignGame);
         }
         if (g.status === "finished") {
           document.getElementById("btn-home").addEventListener("click", goHome);
+          const btnRematch = document.getElementById("btn-rematch");
+          if (btnRematch) btnRematch.addEventListener("click", sendRematch);
+        }
+        // ===== REMATCH: show approval UI if opponent sent a rematch =====
+        if (g.status === "finished" && g.rematchBy && g.rematchBy !== currentUser.uid && !g.rematchAccepted) {
+          const rematchStatus = document.getElementById("rematch-status");
+          if (rematchStatus) {
+            const opponentName = g.rematchBy === g.whiteUid ? g.whiteUsername : g.blackUsername;
+            rematchStatus.innerHTML = '<div style="padding:10px;border:1px solid rgba(245,158,11,0.3);border-radius:8px;background:rgba(245,158,11,0.08);">' +
+              '<div style="font-size:12px;color:#fbbf24;margin-bottom:8px;">⚔️ ' + opponentName + ' wants a rematch</div>' +
+              '<div style="display:flex;gap:6px;">' +
+                '<button class="btn-action" id="btn-rematch-accept" style="flex:1;background:#10b981;color:#fff;border:none;">✓ Accept</button>' +
+                '<button class="btn-action" id="btn-rematch-decline" style="flex:1;background:rgba(120,113,108,0.2);color:#a8a29e;border:1px solid rgba(120,113,108,0.3);">✕ Decline</button>' +
+              '</div>' +
+            '</div>';
+            document.getElementById("btn-rematch-accept").addEventListener("click", acceptRematch);
+            document.getElementById("btn-rematch-decline").addEventListener("click", declineRematch);
+          }
+        }
+        // ===== REMATCH: show "waiting for approval" if I sent the rematch =====
+        if (g.status === "finished" && g.rematchBy === currentUser.uid && !g.rematchAccepted) {
+          const rematchStatus = document.getElementById("rematch-status");
+          if (rematchStatus) {
+            rematchStatus.innerHTML = '<div style="padding:8px 10px;border:1px solid rgba(245,158,11,0.2);border-radius:8px;background:rgba(245,158,11,0.05);font-size:12px;color:#a8a29e;">⏳ Waiting for opponent to accept rematch...</div>';
+            // Hide the rematch button while waiting
+            const btnR = document.getElementById("btn-rematch");
+            if (btnR) btnR.style.display = "none";
+          }
         }
 
         // Move list — simple, hidden when empty
@@ -3820,6 +3862,71 @@
         const winner = onlineGameState.myColor === "w" ? "black" : "white";
         await updateDoc(ref, { status: "finished", winner, endedAt: Date.now() });
         await updateStats(winner);
+      }
+
+      // ===== REMATCH FUNCTIONS =====
+      // sendRematch: mark the finished game with rematchBy = my uid.
+      // The opponent's client sees this and shows Accept/Decline buttons.
+      async function sendRematch() {
+        if (!activeGameId || !currentUser) return;
+        const { db, doc, updateDoc, getDoc } = window.fb;
+        const ref = doc(db, "games", activeGameId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const g = snap.data();
+        if (g.status !== "finished") return;
+        if (g.rematchBy) {
+          alert("A rematch request already exists. Wait for it to be accepted or declined.");
+          return;
+        }
+        await updateDoc(ref, { rematchBy: currentUser.uid, rematchAccepted: false });
+      }
+
+      // acceptRematch: create a NEW game with swapped colors, then join it.
+      // Both players will be redirected to the new game via the rematchAccepted flag.
+      async function acceptRematch() {
+        if (!activeGameId || !currentUser) return;
+        const { db, doc, updateDoc, getDoc, collection, addDoc } = window.fb;
+        const ref = doc(db, "games", activeGameId);
+        const snap = await getDoc(ref);
+        if (!snap.exists()) return;
+        const g = snap.data();
+        if (g.status !== "finished") return;
+        if (!g.rematchBy || g.rematchBy === currentUser.uid) return;
+        // Swap colors: the player who requested rematch plays the opposite color.
+        const newWhite = g.whiteUid === currentUser.uid
+          ? { uid: g.blackUid, username: g.blackUsername }   // I was white, now I'm black → opponent is white
+          : { uid: g.whiteUid, username: g.whiteUsername };  // I was black, now I'm white → I'm white
+        const newBlack = g.whiteUid === currentUser.uid
+          ? { uid: g.whiteUid, username: g.whiteUsername }
+          : { uid: g.blackUid, username: g.blackUsername };
+        const now = Date.now();
+        const gameRef = await addDoc(collection(db, "games"), {
+          whiteUid: newWhite.uid, whiteUsername: newWhite.username,
+          blackUid: newBlack.uid, blackUsername: newBlack.username,
+          status: "active", winner: null,
+          fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+          turn: "w",
+          createdAt: now,
+          createdAtServer: window.fb.serverTimestamp(),
+          endedAt: null,
+          lastMoveAt: now,
+          rematchOf: activeGameId,  // link back to the original game
+        });
+        // Mark the old game as rematch accepted + store the new game id.
+        // Both clients watch the old game doc and will redirect to the new game.
+        await updateDoc(ref, { rematchAccepted: true, rematchGameId: gameRef.id });
+        // Join the new game immediately (the requester will join via the listener below).
+        joinOnlineGame(gameRef.id);
+      }
+
+      // declineRematch: clear the rematchBy flag so both players return to normal.
+      async function declineRematch() {
+        if (!activeGameId) return;
+        const { db, doc, updateDoc } = window.fb;
+        await updateDoc(doc(db, "games", activeGameId), {
+          rematchBy: null, rematchAccepted: false, rematchGameId: null
+        });
       }
 
       async function updateStats(winner) {
