@@ -260,6 +260,28 @@ Error generating stack: `+a.message+`
       [class*="border-4"][class*="transition-all"] {
         transition: border-color 0.3s ease !important;
       }
+
+      /* ===== FOCUS MODE: perfectly symmetrical board spacing =====
+         When focus mode is active, the board must be perfectly centered
+         both horizontally and vertically with equal space on all sides. */
+      main[class*="min-h-screen flex items-center justify-center"] {
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 100vh !important;
+      }
+      main[class*="min-h-screen flex items-center justify-center"] > div {
+        width: 100% !important;
+        max-width: min(90vh, 700px) !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+      }
+      main[class*="min-h-screen flex items-center justify-center"] .chess-board-wrap,
+      main[class*="min-h-screen flex items-center justify-center"] [class*="border-4"][class*="border-8"][class*="shadow-2xl"] {
+        margin: 0 auto !important;
+        max-width: min(85vh, 650px) !important;
+      }
     </style>
 
   </head>
