@@ -18,16 +18,24 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Grandmaster's Arena — Chess",
   description:
-    "A polished chess experience: play against an AI with 5 difficulty levels, pass-and-play with a friend, get post-game coaching from an AI mentor, and track your stats.",
-  keywords: ["chess", "chess game", "AI chess", "chess coach", "react-chessboard", "chess.js"],
+    "Play chess against an AI with 5 difficulty levels, challenge a friend online, and master the royal game.",
+  keywords: ["chess", "chess game", "AI chess", "play chess online", "react-chessboard", "chess.js"],
   authors: [{ name: "Grandmaster's Arena" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/icon.svg",
+  },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Grandmaster's Arena",
   },
   openGraph: {
     title: "Grandmaster's Arena — Chess",
     description:
-      "Play chess against an AI, learn from an AI coach, and master the royal game.",
+      "Play chess against an AI, challenge a friend online, and master the royal game.",
     type: "website",
   },
 };
