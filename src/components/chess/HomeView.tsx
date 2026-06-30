@@ -197,33 +197,6 @@ export function HomeView({ onStart, onShowStats, onShowHistory, onPlayOnline }: 
             </motion.section>
           )}
 
-          {/* Time control */}
-          <section className="rounded-xl border border-border bg-card/60 p-5">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              <Crown className="h-4 w-4" /> Time Control
-            </h2>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {TIME_CONTROLS.map((tc) => (
-                <button
-                  key={tc.id}
-                  type="button"
-                  onClick={() => setTimeControlId(tc.id)}
-                  className={`rounded-lg border px-3 py-2 text-center transition-all ${
-                    timeControlId === tc.id
-                      ? "border-primary bg-primary/10 ring-1 ring-primary/40"
-                      : "border-border bg-background/40 hover:bg-accent/40"
-                  }`}
-                >
-                  <div className="text-sm font-semibold">{tc.shortLabel}</div>
-                  <div className="text-[10px] text-muted-foreground">{tc.label.split(" · ")[0]}</div>
-                </button>
-              ))}
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              {TIME_CONTROLS.find((t) => t.id === timeControlId)?.description}
-            </p>
-          </section>
-
           {/* Allow undo (vs AI only) */}
           {mode === "ai" && (
             <section className="flex items-center justify-between rounded-xl border border-border bg-card/60 p-4">
@@ -255,10 +228,36 @@ export function HomeView({ onStart, onShowStats, onShowHistory, onPlayOnline }: 
           className="space-y-5"
         >
           {/* Stats summary */}
+          {/* Time control */}
+          <div className="rounded-xl border border-border bg-card/60 p-4">
+            <h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <Crown className="h-3.5 w-3.5" /> Time Control
+            </h2>
+            <div className="grid grid-cols-3 gap-1.5">
+              {TIME_CONTROLS.map((tc) => (
+                <button
+                  key={tc.id}
+                  type="button"
+                  onClick={() => setTimeControlId(tc.id)}
+                  className={`rounded-lg border px-2 py-1.5 text-center transition-all ${
+                    timeControlId === tc.id
+                      ? "border-primary bg-primary/10 ring-1 ring-primary/40"
+                      : "border-border bg-background/40 hover:bg-accent/40"
+                  }`}
+                >
+                  <div className="text-xs font-semibold">{tc.shortLabel}</div>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              {TIME_CONTROLS.find((t) => t.id === timeControlId)?.description}
+            </p>
+          </div>
+
           <StatsSummary onShowStats={onShowStats} onShowHistory={onShowHistory} />
 
           {/* Settings */}
-          <Tabs defaultValue="board">
+          <Tabs defaultValue="display">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="board" className="gap-1 text-xs">
                 <Palette className="h-3.5 w-3.5" /> Board

@@ -261,17 +261,6 @@ function OnlineGameOverView({
         </div>
       </div>
 
-      <div className="mb-6 rounded-xl border border-border bg-card/60 p-5">
-        <h2 className="mb-2 flex items-center gap-2 text-base font-semibold">
-          <Globe className="h-5 w-5 text-primary" /> Game Record (PGN)
-        </h2>
-        <ScrollArea className="max-h-40 rounded-md bg-muted/30 p-3">
-          <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed">
-            {pgn || "(no moves recorded)"}
-          </pre>
-        </ScrollArea>
-      </div>
-
       {/* Rematch section */}
       <div className="mb-4">
         {/* Opponent requested rematch — show accept/decline */}
