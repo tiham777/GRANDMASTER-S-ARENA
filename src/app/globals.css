@@ -226,3 +226,267 @@
   50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
 }
 .dot-online { animation: pulse-online 1.8s infinite; }
+/* ===== ENHANCED UX ADDITIONS ===== */
+
+/* Smooth page transitions */
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes clockPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+}
+
+@keyframes winGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6), 0 0 80px rgba(245, 158, 11, 0.2); }
+}
+
+@keyframes lossShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+  90% { transform: translateX(2px); }
+}
+
+@keyframes pieceCapture {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+@keyframes kingCheckPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8), inset 0 0 12px rgba(239, 68, 68, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0), inset 0 0 20px rgba(239, 68, 68, 0.7);
+  }
+}
+
+@keyframes turnIndicatorSlide {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-30px); opacity: 0; }
+}
+
+/* Move history scrollbar */
+.move-history-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.move-history-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.move-history-scroll::-webkit-scrollbar-thumb {
+  background: rgba(120, 113, 108, 0.4);
+  border-radius: 99px;
+}
+.move-history-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 113, 108, 0.4) transparent;
+}
+
+/* Animated turn indicator bar at top of player card */
+.turn-indicator-bar {
+  height: 2px;
+  border-radius: 99px;
+  background: linear-gradient(to right, #10b981, #34d399);
+  transform-origin: left;
+  animation: turnIndicatorSlide 0.3s ease-out forwards;
+}
+
+/* Win/loss glow effects */
+.game-result-win {
+  animation: winGlow 2s ease-in-out infinite;
+}
+.game-result-loss {
+  animation: lossShake 0.5s ease-in-out;
+}
+
+/* Better check indicator — pulsing ring */
+.check-ring {
+  animation: kingCheckPulse 0.8s ease-in-out infinite;
+}
+
+/* Player cards in game */
+.player-card-active {
+  animation: clockPulse 1.5s ease-in-out infinite;
+}
+
+/* Tooltip hover for captured pieces */
+.captured-piece {
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+.captured-piece:hover {
+  transform: scale(1.3) translateY(-2px);
+}
+
+/* Clock low-time animation */
+@keyframes clockLowTime {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.clock-low {
+  animation: clockLowTime 0.6s ease-in-out infinite;
+  color: #f87171 !important;
+}
+
+/* Board theme transition */
+.chess-board-wrap {
+  transition: border-color 0.3s ease;
+}
+
+/* Lobby player card hover */
+.lobby-player-card {
+  transition: all 0.2s ease;
+}
+.lobby-player-card:hover {
+  transform: translateY(-1px);
+}
+
+/* Challenge countdown urgency */
+@keyframes urgentPulse {
+  0%, 100% { background: rgba(239, 68, 68, 0.08); }
+  50% { background: rgba(239, 68, 68, 0.18); }
+}
+.challenge-urgent {
+  animation: urgentPulse 0.8s ease-in-out infinite;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Win streak badge shine */
+@keyframes badgeShine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.streak-badge {
+  background: linear-gradient(
+    90deg,
+    rgba(251, 191, 36, 0.8) 0%,
+    rgba(245, 158, 11, 1) 40%,
+    rgba(251, 191, 36, 0.8) 100%
+  );
+  background-size: 200% auto;
+  animation: badgeShine 3s linear infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Game action buttons */
+.game-action-btn {
+  transition: all 0.15s ease;
+}
+.game-action-btn:hover {
+  transform: translateY(-1px);
+}
+.game-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Improved mobile responsiveness for game board */
+@media (max-width: 480px) {
+  .chess-board-wrap {
+    border-width: 4px !important;
+  }
+}
+
+/* Notation highlight for current/last move */
+.move-current {
+  background: rgba(245, 158, 11, 0.15) !important;
+  border-left: 2px solid #f59e0b;
+}
+
+/* Better focus mode transition */
+.focus-transition {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.focus-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+}
+
+/* Profile win rate ring */
+.win-ring-track {
+  stroke: rgba(120, 113, 108, 0.2);
+}
+.win-ring-fill {
+  transition: stroke-dashoffset 1s ease;
+  stroke: #10b981;
+}
+
+/* Scrollable move list on mobile */
+@media (max-width: 640px) {
+  .move-history-scroll {
+    max-height: 200px;
+  }
+}
+
+/* Coordinate labels on board */
+.board-coord-label {
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.65;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Pulse for active notification / incoming challenge */
+@keyframes notifyPing {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+.notify-ping::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.5);
+  animation: notifyPing 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Better board shadow on dark backgrounds */
+.board-shadow-dark {
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(245, 158, 11, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+/* Captured pieces material score badge */
+.material-up {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.material-down {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.material-even {
+  background: rgba(120, 113, 108, 0.1);
+  color: #a8a29e;
+  border-color: rgba(120, 113, 108, 0.2);
+}

@@ -242,38 +242,86 @@ export default function LobbyView() {
         <motion.section
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-stone-800 bg-stone-900/50 p-4 mb-6 flex items-center gap-4"
+          className="rounded-2xl border border-stone-800 bg-gradient-to-br from-stone-900/80 to-stone-900/40 p-4 mb-6 relative overflow-hidden"
         >
-          <Avatar className="size-14 ring-2 ring-amber-500/40">
-            <AvatarImage src={profile.photoURL ?? undefined} />
-            <AvatarFallback className="bg-stone-800 text-amber-300 text-lg">
-              {profile.username.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold text-stone-100">{profile.username}</h2>
-              {profile.provider === "google" ? (
-                <Badge variant="outline" className="border-amber-500/30 text-amber-300 bg-amber-500/5">
-                  <Shield className="size-3 mr-1" />
-                  Google
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="border-stone-700 text-stone-400">
-                  <UserIcon className="size-3 mr-1" />
-                  Guest
-                </Badge>
+          {/* Decorative amber glow */}
+          <div className="absolute top-0 left-0 w-32 h-full bg-gradient-to-r from-amber-500/5 to-transparent pointer-events-none" />
+
+          <div className="flex items-center gap-4 relative">
+            <div className="relative flex-shrink-0">
+              <Avatar className="size-14 ring-2 ring-amber-500/40 shadow-lg">
+                <AvatarImage src={profile.photoURL ?? undefined} />
+                <AvatarFallback className="bg-gradient-to-br from-amber-500/20 to-stone-800 text-amber-300 text-lg font-bold">
+                  {profile.username.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full bg-emerald-400 ring-2 ring-stone-900 dot-online" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h2 className="text-lg font-bold text-stone-100">{profile.username}</h2>
+                {profile.provider === "google" ? (
+                  <Badge variant="outline" className="border-amber-500/30 text-amber-300 bg-amber-500/8 text-[10px] h-5">
+                    <Shield className="size-2.5 mr-1" />
+                    Google
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-stone-700 text-stone-400 text-[10px] h-5">
+                    <UserIcon className="size-2.5 mr-1" />
+                    Guest
+                  </Badge>
+                )}
+                {stats && stats.wins >= 50 && (
+                  <Badge className="bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] h-5">
+                    <Crown className="size-2.5 mr-1" />Master
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-stone-500 truncate mb-2">
+                {profile.email ?? "Playing anonymously"}
+              </p>
+              {stats && stats.total > 0 && (
+                <div className="flex items-center gap-1 flex-wrap">
+                  <div className="h-1.5 rounded-full bg-stone-800 flex-1 max-w-[120px] overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all"
+                      style={{ width: `${(stats.wins / stats.total) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-stone-500">
+                    {Math.round((stats.wins / stats.total) * 100)}% win rate
+                  </span>
+                </div>
               )}
             </div>
-            <p className="text-xs text-stone-500 truncate">
-              {profile.email ?? "No email — playing anonymously"}
-            </p>
+
+            {stats && (
+              <div className="hidden sm:flex items-center gap-2">
+                <Stat label="Wins" value={stats.wins} tone="emerald" />
+                <Stat label="Losses" value={stats.losses} tone="rose" />
+                <Stat label="Draws" value={stats.draws} tone="stone" />
+              </div>
+            )}
           </div>
+
+          {/* Mobile stats */}
           {stats && (
-            <div className="hidden sm:flex items-center gap-2">
-              <Stat label="Wins" value={stats.wins} tone="emerald" />
-              <Stat label="Losses" value={stats.losses} tone="rose" />
-              <Stat label="Draws" value={stats.draws} tone="stone" />
+            <div className="flex sm:hidden items-center gap-2 mt-3 pt-3 border-t border-stone-800">
+              <div className="flex-1 text-center">
+                <div className="text-base font-bold text-emerald-400">{stats.wins}</div>
+                <div className="text-[9px] uppercase tracking-wider text-stone-500">Wins</div>
+              </div>
+              <div className="w-px h-8 bg-stone-800" />
+              <div className="flex-1 text-center">
+                <div className="text-base font-bold text-rose-400">{stats.losses}</div>
+                <div className="text-[9px] uppercase tracking-wider text-stone-500">Losses</div>
+              </div>
+              <div className="w-px h-8 bg-stone-800" />
+              <div className="flex-1 text-center">
+                <div className="text-base font-bold text-stone-300">{stats.draws}</div>
+                <div className="text-[9px] uppercase tracking-wider text-stone-500">Draws</div>
+              </div>
             </div>
           )}
         </motion.section>
@@ -311,17 +359,23 @@ export default function LobbyView() {
             {/* Player list */}
             <div className="rounded-xl border border-stone-800 bg-stone-900/40 overflow-hidden">
               {listToShow.length === 0 ? (
-                <div className="p-8 text-center">
+                <div className="p-10 text-center">
                   {search.trim() ? (
                     <>
-                      <Search className="size-6 text-stone-700 mx-auto mb-2" />
-                      <p className="text-sm text-stone-500">No players match your search.</p>
+                      <div className="size-12 rounded-full bg-stone-800/60 flex items-center justify-center mx-auto mb-3">
+                        <Search className="size-5 text-stone-600" />
+                      </div>
+                      <p className="text-sm font-semibold text-stone-400 mb-1">No results found</p>
+                      <p className="text-xs text-stone-600">Try a different username.</p>
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="size-6 text-stone-700 mx-auto mb-2" />
-                      <p className="text-sm text-stone-500">
-                        No one else online right now. Share the link with a friend!
+                      <div className="size-12 rounded-full bg-stone-800/60 flex items-center justify-center mx-auto mb-3">
+                        <span className="text-2xl">♟</span>
+                      </div>
+                      <p className="text-sm font-semibold text-stone-400 mb-1">No players online</p>
+                      <p className="text-xs text-stone-600 max-w-[200px] mx-auto">
+                        Share this link with a friend to start a match!
                       </p>
                     </>
                   )}
@@ -333,57 +387,74 @@ export default function LobbyView() {
                     const alreadyChallenged = outgoing.some(
                       (c) => c.targetUid === p.uid && c.status === "pending"
                     );
+                    const total = p.wins + p.losses + p.draws;
+                    const winRate = total > 0 ? Math.round((p.wins / total) * 100) : 0;
+                    const levelLabel = p.wins >= 50 ? "Master" : p.wins >= 20 ? "Skilled" : p.wins >= 5 ? "Casual" : "Beginner";
+                    const levelColor = p.wins >= 50 ? "text-amber-400" : p.wins >= 20 ? "text-emerald-400" : p.wins >= 5 ? "text-sky-400" : "text-stone-400";
                     return (
-                      <li
+                      <motion.li
                         key={p.uid}
-                        className="flex items-center gap-3 p-3 hover:bg-stone-800/40 transition-colors"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="lobby-player-card"
                       >
-                        <div className="relative">
-                          <Avatar className="size-9">
-                            <AvatarImage src={p.photoURL ?? undefined} />
-                            <AvatarFallback className="bg-stone-800 text-amber-300 text-xs">
-                              {p.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-500 ring-2 ring-stone-900 dot-online" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-medium text-stone-100 truncate">
-                              {p.username}
-                            </p>
-                            {p.provider === "google" ? (
-                              <Shield className="size-3 text-amber-400" />
-                            ) : (
-                              <UserIcon className="size-3 text-stone-500" />
-                            )}
-                            <span className="text-[10px] text-stone-500">
-                              {p.wins}W · {p.losses}L
-                            </span>
+                        <div className="flex items-center gap-3 px-3 py-3 hover:bg-stone-800/50 transition-all rounded-lg mx-1 my-0.5">
+                          <div className="relative flex-shrink-0">
+                            <Avatar className="size-10 ring-2 ring-stone-700">
+                              <AvatarImage src={p.photoURL ?? undefined} />
+                              <AvatarFallback className="bg-gradient-to-br from-stone-700 to-stone-800 text-amber-300 text-sm font-bold">
+                                {p.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-emerald-400 ring-2 ring-stone-900" />
                           </div>
-                          <p className="text-[11px] text-stone-500 truncate">
-                            {p.isOnline ? "Online now" : "Offline"}
-                          </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="text-sm font-semibold text-stone-100 truncate">
+                                {p.username}
+                              </p>
+                              {p.provider === "google" && (
+                                <Shield className="size-3 text-amber-400 flex-shrink-0" />
+                              )}
+                              <span className={`text-[9px] font-bold uppercase tracking-wider ${levelColor}`}>
+                                {levelLabel}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] text-emerald-500 font-semibold">{p.wins}W</span>
+                              <span className="text-[10px] text-stone-600">·</span>
+                              <span className="text-[10px] text-rose-500 font-semibold">{p.losses}L</span>
+                              <span className="text-[10px] text-stone-600">·</span>
+                              <span className="text-[10px] text-stone-500 font-semibold">{p.draws}D</span>
+                              {total > 0 && (
+                                <>
+                                  <span className="text-[10px] text-stone-600">·</span>
+                                  <span className="text-[10px] text-amber-400/70 font-medium">{winRate}% WR</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant={alreadyChallenged ? "outline" : "default"}
+                            disabled={isBusy || alreadyChallenged}
+                            onClick={() => openColorPicker(p)}
+                            className={
+                              alreadyChallenged
+                                ? "border-stone-700 text-stone-500 text-xs h-8"
+                                : "bg-amber-500 text-stone-950 hover:bg-amber-400 text-xs h-8 font-semibold game-action-btn"
+                            }
+                          >
+                            {isBusy ? (
+                              <Loader2 className="size-3.5 animate-spin" />
+                            ) : alreadyChallenged ? (
+                              <>✓ Sent</>
+                            ) : (
+                              <><Swords className="size-3.5 mr-1" />Challenge</>
+                            )}
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant={alreadyChallenged ? "outline" : "default"}
-                          disabled={isBusy || alreadyChallenged}
-                          onClick={() => openColorPicker(p)}
-                          className={
-                            alreadyChallenged
-                              ? "border-stone-700 text-stone-500"
-                              : "bg-amber-500 text-stone-950 hover:bg-amber-400"
-                          }
-                        >
-                          {isBusy ? (
-                            <Loader2 className="size-3.5 mr-1 animate-spin" />
-                          ) : (
-                            <Swords className="size-3.5 mr-1" />
-                          )}
-                          {alreadyChallenged ? "Sent" : "Challenge"}
-                        </Button>
-                      </li>
+                      </motion.li>
                     );
                   })}
                 </ul>
@@ -437,57 +508,74 @@ export default function LobbyView() {
 
       {/* Color picker dialog — challenger chooses which side to play */}
       <Dialog open={!!colorPickFor} onOpenChange={(o) => !o && setColorPickFor(null)}>
-        <DialogContent className="bg-stone-900 border-stone-700 text-stone-100">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Swords className="size-5 text-amber-400" />
-              Challenge {colorPickFor?.username}
-            </DialogTitle>
-            <DialogDescription className="text-stone-400">
-              Choose which color you want to play. {colorPickFor?.username} will see your choice before they accept.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-3 gap-3 py-2">
-            <ColorOption
-              label="White"
-              description="Move first"
-              selected={pendingColor === "white"}
-              onClick={() => setPendingColor("white")}
-              swatch={
-                <span className="size-8 rounded-full bg-stone-100 border-2 border-stone-300" />
-              }
-            />
-            <ColorOption
-              label="Black"
-              description="Respond to 1.e4"
-              selected={pendingColor === "black"}
-              onClick={() => setPendingColor("black")}
-              swatch={
-                <span className="size-8 rounded-full bg-stone-950 border-2 border-stone-700" />
-              }
-            />
-            <ColorOption
-              label="Random"
-              description="Coin flip"
-              selected={pendingColor === "random"}
-              onClick={() => setPendingColor("random")}
-              swatch={
-                <span className="size-8 rounded-full overflow-hidden border-2 border-stone-700 flex">
-                  <span className="w-1/2 h-full bg-stone-100" />
-                  <span className="w-1/2 h-full bg-stone-950" />
-                </span>
-              }
-            />
+        <DialogContent className="bg-stone-900 border-stone-700 text-stone-100 max-w-sm p-0 overflow-hidden">
+          {/* Header banner */}
+          <div className="bg-gradient-to-b from-amber-500/10 to-transparent px-5 pt-5 pb-4 border-b border-stone-800">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0">
+                <Swords className="size-5 text-stone-950" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Challenge</p>
+                <h2 className="text-base font-bold text-stone-100">{colorPickFor?.username}</h2>
+              </div>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setColorPickFor(null)} className="text-stone-300">
-              Cancel
-            </Button>
-            <Button onClick={confirmChallenge} className="bg-amber-500 text-stone-950 hover:bg-amber-400">
-              <Swords className="size-4 mr-1.5" />
-              Send Challenge
-            </Button>
-          </DialogFooter>
+
+          <div className="p-5">
+            <p className="text-xs text-stone-500 mb-4">
+              Pick your side — your opponent will see this before accepting.
+            </p>
+            <div className="grid grid-cols-3 gap-2 mb-5">
+              <ColorOption
+                label="White"
+                description="Move first"
+                selected={pendingColor === "white"}
+                onClick={() => setPendingColor("white")}
+                swatch={
+                  <span className="size-10 rounded-full bg-stone-100 border-2 border-stone-300 shadow-sm shadow-stone-200/20" />
+                }
+              />
+              <ColorOption
+                label="Black"
+                description="2nd mover"
+                selected={pendingColor === "black"}
+                onClick={() => setPendingColor("black")}
+                swatch={
+                  <span className="size-10 rounded-full bg-stone-950 border-2 border-stone-600 shadow-sm" />
+                }
+              />
+              <ColorOption
+                label="Random"
+                description="Coin flip"
+                selected={pendingColor === "random"}
+                onClick={() => setPendingColor("random")}
+                swatch={
+                  <span className="size-10 rounded-full overflow-hidden border-2 border-stone-600 flex shadow-sm">
+                    <span className="w-1/2 h-full bg-stone-100" />
+                    <span className="w-1/2 h-full bg-stone-950" />
+                  </span>
+                }
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setColorPickFor(null)}
+                className="flex-1 border border-stone-700 text-stone-400 hover:text-stone-200 hover:bg-stone-800"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmChallenge}
+                className="flex-1 bg-amber-500 text-stone-950 hover:bg-amber-400 font-semibold"
+              >
+                <Swords className="size-4 mr-1.5" />
+                Send!
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -512,18 +600,25 @@ function ColorOption({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
+      className={`flex flex-col items-center gap-2.5 py-4 px-2 rounded-xl border-2 transition-all relative overflow-hidden ${
         selected
-          ? "border-amber-500 bg-amber-500/10"
-          : "border-stone-700 bg-stone-950/40 hover:border-stone-600 hover:bg-stone-900"
+          ? "border-amber-500 bg-amber-500/10 shadow-md shadow-amber-500/10"
+          : "border-stone-700 bg-stone-950/40 hover:border-stone-500 hover:bg-stone-900/80"
       }`}
     >
+      {selected && (
+        <span className="absolute top-1.5 right-1.5 size-4 rounded-full bg-amber-500 flex items-center justify-center">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+            <path d="M1.5 4L3.5 6L6.5 2" stroke="#0c0a09" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+      )}
       {swatch}
       <div className="text-center">
-        <div className={`text-sm font-semibold ${selected ? "text-amber-300" : "text-stone-200"}`}>
+        <div className={`text-xs font-bold ${selected ? "text-amber-300" : "text-stone-200"}`}>
           {label}
         </div>
-        <div className="text-[10px] text-stone-500 mt-0.5">{description}</div>
+        <div className="text-[9px] text-stone-500 mt-0.5">{description}</div>
       </div>
     </button>
   );
@@ -543,10 +638,15 @@ function Stat({
     rose: "text-rose-400",
     stone: "text-stone-300",
   };
+  const borders = {
+    emerald: "border-emerald-500/20 bg-emerald-500/5",
+    rose: "border-rose-500/20 bg-rose-500/5",
+    stone: "border-stone-700 bg-stone-800/40",
+  };
   return (
-    <div className="flex flex-col items-center px-3 py-1.5 rounded-lg bg-stone-950/60 border border-stone-800 min-w-[60px]">
-      <span className={`text-lg font-semibold ${tones[tone]}`}>{value}</span>
-      <span className="text-[10px] uppercase tracking-wider text-stone-500">{label}</span>
+    <div className={`flex flex-col items-center px-3.5 py-2 rounded-xl border min-w-[64px] ${borders[tone]}`}>
+      <span className={`text-xl font-bold tabular-nums ${tones[tone]}`}>{value}</span>
+      <span className="text-[9px] uppercase tracking-wider text-stone-500 font-semibold mt-0.5">{label}</span>
     </div>
   );
 }

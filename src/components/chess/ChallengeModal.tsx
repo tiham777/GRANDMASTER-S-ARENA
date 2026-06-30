@@ -70,6 +70,9 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
     }
   }
 
+  const urgency = remaining < 60_000;
+  const critical = remaining < 20_000;
+
   return (
     <AnimatePresence>
       {remaining > 0 && (
@@ -77,56 +80,80 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
         >
           <motion.div
-            initial={{ scale: 0.9, y: 10 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 10 }}
-            transition={{ type: "spring", stiffness: 320, damping: 24 }}
-            className="w-full max-w-md rounded-2xl border border-amber-500/30 bg-stone-900 shadow-2xl shadow-amber-900/30 overflow-hidden"
+            initial={{ scale: 0.88, y: 16, opacity: 0 }}
+            animate={{ scale: 1, y: 0, opacity: 1 }}
+            exit={{ scale: 0.88, y: 16, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 340, damping: 26 }}
+            className={`w-full max-w-sm rounded-2xl border shadow-2xl overflow-hidden ${
+              critical
+                ? "border-rose-500/50 bg-stone-900 shadow-rose-900/40"
+                : urgency
+                ? "border-orange-500/40 bg-stone-900 shadow-orange-900/30"
+                : "border-amber-500/30 bg-stone-900 shadow-amber-900/25"
+            }`}
           >
-            <div className="h-1 bg-shimmer" />
-            <div className="p-6">
+            {/* Countdown progress bar */}
+            <div className="h-1.5 bg-stone-800 relative overflow-hidden">
+              <div
+                className={`h-full ${
+                  critical ? "bg-rose-500" : urgency ? "bg-orange-500" : "bg-amber-500"
+                }`}
+                style={{
+                  width: `${Math.max(0, (remaining / (5 * 60 * 1000)) * 100)}%`,
+                  transition: "width 1s linear"
+                }}
+              />
+            </div>
+
+            <div className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="size-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                <motion.div
+                  animate={{ scale: [1, 1.06, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.8 }}
+                  className="size-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0"
+                >
                   <Swords className="size-5 text-stone-950" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-xs uppercase tracking-wider text-amber-400 font-medium">
-                    Challenge received
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-amber-400 font-bold mb-0.5">
+                    ⚔ Challenge incoming
                   </p>
-                  <h2 className="text-lg font-semibold text-stone-100">
+                  <h2 className="text-lg font-bold text-stone-100 truncate">
                     {challenge.challengerName}
                   </h2>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-950/60 border border-stone-800 text-amber-300 text-sm font-mono">
-                  <Clock className="size-3.5" />
+                <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-sm font-mono font-bold ${
+                  critical
+                    ? "bg-rose-500/15 border-rose-500/40 text-rose-300"
+                    : urgency
+                    ? "bg-orange-500/15 border-orange-500/40 text-orange-300"
+                    : "bg-stone-950/60 border-stone-700 text-amber-300"
+                }`}>
+                  <Clock className={`size-3.5 ${critical ? "animate-ping" : urgency ? "animate-pulse" : ""}`} />
                   {fmt(remaining)}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mb-5 text-stone-400 text-sm">
-                <AlertCircle className="size-4 text-stone-500" />
-                Accept within 5 minutes or the challenge expires.
-              </div>
-
-              {/* Show the color the challenger wants to play.
-                  Accepter will automatically get the opposite color. */}
-              <div className="flex items-center gap-3 mb-5 p-3 rounded-lg bg-stone-950/60 border border-stone-800">
-                <span className="text-xs text-stone-500 uppercase tracking-wider">They want to play</span>
-                <div className="flex items-center gap-2">
+              {/* Color display — side by side */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="p-3 rounded-xl bg-stone-950/50 border border-stone-800 text-center">
+                  <div className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-1.5">They play</div>
                   <ColorChip choice={challenge.challengerColor ?? "white"} />
-                  <span className="text-xs text-stone-400">
-                    — you&apos;ll play{" "}
-                    <span className="text-amber-300 font-semibold">
-                      {(challenge.challengerColor ?? "white") === "white"
-                        ? "Black"
+                </div>
+                <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/20 text-center">
+                  <div className="text-[9px] uppercase tracking-widest text-amber-500/70 font-bold mb-1.5">You play</div>
+                  <ColorChip
+                    choice={
+                      (challenge.challengerColor ?? "white") === "white"
+                        ? "black"
                         : (challenge.challengerColor ?? "white") === "black"
-                          ? "White"
-                          : "a random side (decided on accept)"}
-                    </span>
-                  </span>
+                        ? "white"
+                        : "random"
+                    }
+                  />
                 </div>
               </div>
 
@@ -135,7 +162,7 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
                   variant="outline"
                   onClick={handleDecline}
                   disabled={busy}
-                  className="flex-1 h-11 border-stone-700 hover:bg-stone-800 text-stone-200"
+                  className="flex-1 h-11 border-stone-700 bg-stone-800/40 hover:bg-stone-800 text-stone-300 hover:text-stone-100"
                 >
                   <X className="size-4 mr-1.5" />
                   Decline
@@ -143,10 +170,10 @@ export function IncomingChallengeModal({ challenge }: { challenge: Challenge }) 
                 <Button
                   onClick={handleAccept}
                   disabled={busy}
-                  className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950"
+                  className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-400 text-stone-950 font-bold shadow-md shadow-emerald-500/20"
                 >
                   <Check className="size-4 mr-1.5" />
-                  Accept
+                  Accept!
                 </Button>
               </div>
             </div>
@@ -185,27 +212,39 @@ export function OutgoingChallengeModal({ challenge }: { challenge: Challenge }) 
     }
   }
 
+  const urgency = remaining < 60_000;
+  const pct = Math.max(0, (remaining / (5 * 60 * 1000)) * 100);
+
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-      <div className="flex items-center gap-3">
-        <div className="size-9 rounded-full bg-amber-500/20 flex items-center justify-center">
-          <Clock className="size-4 text-amber-400 animate-pulse" />
+    <div className={`rounded-xl border overflow-hidden ${urgency ? "border-orange-500/30 bg-orange-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
+      {/* Countdown bar */}
+      <div className="h-0.5 bg-stone-800">
+        <div
+          className={`h-full transition-all ${urgency ? "bg-orange-500" : "bg-amber-500"}`}
+          style={{ width: `${pct}%`, transition: "width 1s linear" }}
+        />
+      </div>
+      <div className="flex items-center gap-3 p-4">
+        <div className={`size-9 rounded-full flex items-center justify-center flex-shrink-0 ${urgency ? "bg-orange-500/20" : "bg-amber-500/20"}`}>
+          <Clock className={`size-4 ${urgency ? "text-orange-400" : "text-amber-400"} animate-pulse`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-amber-400 uppercase tracking-wider">
+          <p className={`text-[10px] uppercase tracking-wider font-bold ${urgency ? "text-orange-400" : "text-amber-400"}`}>
             Waiting for response
           </p>
           <p className="text-sm text-stone-200 truncate">
-            Challenge to <span className="font-medium">{challenge.targetName}</span>
+            → <span className="font-semibold">{challenge.targetName}</span>
           </p>
         </div>
-        <div className="text-amber-300 font-mono text-sm">{fmt(remaining)}</div>
+        <div className={`font-mono text-sm font-bold ${urgency ? "text-orange-300" : "text-amber-300"}`}>
+          {fmt(remaining)}
+        </div>
         <Button
           size="sm"
           variant="ghost"
           onClick={handleCancel}
           disabled={busy}
-          className="text-stone-400 hover:text-rose-300 hover:bg-rose-500/10"
+          className="text-stone-500 hover:text-rose-300 hover:bg-rose-500/10 text-xs"
         >
           Cancel
         </Button>

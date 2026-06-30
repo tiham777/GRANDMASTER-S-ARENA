@@ -699,7 +699,8 @@ export default function GameView() {
           <div className="grid sm:grid-cols-2 gap-3 mb-3">
             <LostBox
               title="Your Lost Pieces"
-              subtitle={materialDiff < 0 ? `Down ${-materialDiff} material` : materialDiff > 0 ? `Up ${materialDiff} material` : "Even"}
+              subtitle=""
+              materialScore={materialDiff < 0 ? materialDiff : 0}
               // "My lost pieces" = pieces the opponent captured from me = captured.opp
               types={captured.opp}
               // These pieces belong to me — render in my color's glyph shade.
@@ -708,7 +709,8 @@ export default function GameView() {
             />
             <LostBox
               title="Opponent's Lost Pieces"
-              subtitle={materialDiff > 0 ? `Up ${materialDiff} material` : materialDiff < 0 ? `Down ${-materialDiff} material` : "Even"}
+              subtitle=""
+              materialScore={materialDiff > 0 ? materialDiff : 0}
               // "Opponent lost pieces" = pieces I captured = captured.mine
               types={captured.mine}
               ownerColor={opponent.color}
@@ -786,36 +788,66 @@ export default function GameView() {
               )}
             </div>
 
+            {/* Turn status bar — always visible, even in focus mode */}
+            <div className={`w-full max-w-2xl flex items-center justify-between gap-3 px-1`}>
+              <div className={`flex items-center gap-2 text-sm font-semibold ${
+                activeGame.status !== "playing"
+                  ? "text-stone-400"
+                  : isMyTurn
+                  ? "text-emerald-400"
+                  : isDark ? "text-stone-400" : "text-stone-600"
+              }`}>
+                <span className={`size-2.5 rounded-full flex-shrink-0 ${
+                  activeGame.status !== "playing"
+                    ? "bg-stone-600"
+                    : isMyTurn
+                    ? "bg-emerald-400 animate-pulse"
+                    : "bg-stone-600"
+                }`} />
+                {activeGame.status !== "playing"
+                  ? `Game over — ${activeGame.status}`
+                  : isMyTurn
+                  ? "Your move"
+                  : `${opponent.name} is thinking…`}
+                {activeGame.status === "playing" && game.inCheck() && (
+                  <span className="text-xs font-bold text-rose-400 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded-md">
+                    CHECK
+                  </span>
+                )}
+              </div>
+              <div className={`text-xs font-mono tabular-nums font-bold ${
+                activeGame.turn === myColor
+                  ? (myColor === "white" ? whiteClockMs : blackClockMs) <= 30000
+                    ? "text-rose-400"
+                    : "text-emerald-400"
+                  : isDark ? "text-stone-500" : "text-stone-400"
+              }`}>
+                {fmtTime(myColor === "white" ? whiteClockMs : blackClockMs)}
+              </div>
+            </div>
+
             {/* Action bar — hidden in focus mode (back button at top handles resign) */}
             {!isFocus && activeGame.status === "playing" && (
-              <div className="flex gap-2 pt-1 w-full max-w-2xl">
+              <div className="flex gap-2 pt-2 w-full max-w-2xl">
                 <Button
                   variant="outline"
                   onClick={() => setResignDialog(true)}
                   disabled={busy}
-                  className={`flex-1 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-800 ${actionBtnCls}`}
+                  className={`flex-1 h-10 hover:bg-rose-950/30 hover:text-rose-300 hover:border-rose-800 game-action-btn ${actionBtnCls}`}
+                  title="Resign this game"
                 >
-                  <Flag className="size-4 mr-1.5" />
+                  <Flag className="size-3.5 mr-1.5" />
                   Resign
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleOfferDraw}
                   disabled={busy || !!activeGame.drawOfferBy}
-                  className={`flex-1 hover:bg-amber-950/30 hover:text-amber-300 hover:border-amber-800 ${actionBtnCls}`}
+                  className={`flex-1 h-10 hover:bg-amber-950/30 hover:text-amber-300 hover:border-amber-800 game-action-btn ${actionBtnCls} ${activeGame.drawOfferBy === profile.uid ? "border-amber-700/50 text-amber-400" : ""}`}
+                  title={activeGame.drawOfferBy === profile.uid ? "Draw offer pending…" : "Offer a draw"}
                 >
-                  <Handshake className="size-4 mr-1.5" />
-                  {activeGame.drawOfferBy === profile.uid ? "Offered" : "Draw"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleLeaveAfterGame}
-                  disabled={busy}
-                  className={actionBtnCls}
-                  title="Leave game (return to lobby) — also resigns if match is live"
-                >
-                  <RotateCcw className="size-4" />
-                  <span className="ml-1.5 hidden sm:inline">Lobby</span>
+                  <Handshake className="size-3.5 mr-1.5" />
+                  {activeGame.drawOfferBy === profile.uid ? "Draw offered…" : "Offer Draw"}
                 </Button>
               </div>
             )}
@@ -825,13 +857,18 @@ export default function GameView() {
               Hidden entirely in focus mode. */}
           {!isFocus && (
             <aside className="xl:col-span-4 w-full">
-              {/* 15-minute chess clock — like the offline page's timer box */}
+              {/* 15-minute chess clock */}
               <div className={subCardCls}>
-                <div className={`px-4 py-3 border-b flex items-center gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
-                  <Clock className="size-4 text-amber-400" />
-                  <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-                    Game Clock · 15 min
-                  </h3>
+                <div className={`px-4 py-3 border-b flex items-center justify-between gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
+                  <div className="flex items-center gap-2">
+                    <Clock className="size-4 text-amber-400" />
+                    <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
+                      Game Clock
+                    </h3>
+                  </div>
+                  <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isDark ? "bg-stone-800 text-stone-500" : "bg-stone-100 text-stone-400"}`}>
+                    15 min rapid
+                  </span>
                 </div>
                 <div className="p-3 space-y-2">
                   <ClockRow
@@ -850,19 +887,25 @@ export default function GameView() {
                     isDark={isDark}
                     isMe
                   />
-                  <div className={`text-[10px] pt-1 ${isDark ? "text-stone-500" : "text-stone-500"}`}>
-                    Each player starts with 15:00. Clock ticks down on your turn. Run out → you lose on time.
+                  <div className={`flex items-center gap-1.5 pt-1 text-[10px] ${isDark ? "text-stone-600" : "text-stone-400"}`}>
+                    <CircleDot className="size-3 text-emerald-500" />
+                    Clock ticks on your turn · run out = lose on time
                   </div>
                 </div>
               </div>
 
-              {/* Move timeline panel */}
+              {/* Move history panel */}
               <div className={`mt-4 ${subCardCls}`}>
-                <div className={`px-4 py-3 border-b flex items-center gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
-                  <Clock className="size-4 text-amber-400" />
-                  <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
-                    Move Timeline
-                  </h3>
+                <div className={`px-4 py-3 border-b flex items-center justify-between gap-2 ${isDark ? "border-stone-800" : "border-stone-300"}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">♟</span>
+                    <h3 className={`text-xs font-bold uppercase tracking-wider ${isDark ? "text-stone-400" : "text-stone-600"}`}>
+                      Move History
+                    </h3>
+                  </div>
+                  <span className={`text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded ${isDark ? "bg-stone-800 text-stone-500" : "bg-stone-100 text-stone-400"}`}>
+                    {Math.ceil(activeGame.moves.length / 2)} moves
+                  </span>
                 </div>
                 <MoveList
                   game={activeGame}
@@ -951,27 +994,88 @@ export default function GameView() {
       </Dialog>
 
       <Dialog open={!!endGameInfo} onOpenChange={() => {}}>
-        <DialogContent className="bg-stone-900 border-stone-700 text-stone-100">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {endGameInfo?.tone === "win" && <Crown className="size-5 text-amber-400" />}
-              {endGameInfo?.tone === "loss" && <AlertTriangle className="size-5 text-rose-400" />}
-              {endGameInfo?.tone === "draw" && <Handshake className="size-5 text-stone-300" />}
-              {endGameInfo?.title}
-            </DialogTitle>
-            <DialogDescription className="text-stone-400">{endGameInfo?.detail}</DialogDescription>
-          </DialogHeader>
-          <div className="text-xs text-stone-500">
-            Status: <span className="text-stone-300">{activeGame.status}</span>
-            {activeGame.winnerUid && (
-              <> · Winner: <span className="text-stone-300">{activeGame.winnerUid === profile.uid ? "You" : opponent.name}</span></>
+        <DialogContent className="bg-stone-900 border-stone-700 text-stone-100 overflow-hidden p-0 max-w-sm">
+          {/* Result banner */}
+          <div className={`relative px-6 pt-8 pb-6 text-center ${
+            endGameInfo?.tone === "win"
+              ? "bg-gradient-to-b from-amber-500/20 to-transparent"
+              : endGameInfo?.tone === "loss"
+              ? "bg-gradient-to-b from-rose-500/15 to-transparent"
+              : "bg-gradient-to-b from-stone-700/30 to-transparent"
+          }`}>
+            {endGameInfo?.tone === "win" && (
+              <div className="mb-3">
+                <motion.div
+                  initial={{ scale: 0, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                  className="size-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30"
+                >
+                  <Crown className="size-8 text-stone-950" />
+                </motion.div>
+              </div>
             )}
+            {endGameInfo?.tone === "loss" && (
+              <div className="mb-3">
+                <div className="size-16 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center mx-auto">
+                  <Flag className="size-8 text-rose-400" />
+                </div>
+              </div>
+            )}
+            {endGameInfo?.tone === "draw" && (
+              <div className="mb-3">
+                <div className="size-16 rounded-full bg-stone-700/50 border border-stone-600 flex items-center justify-center mx-auto">
+                  <Handshake className="size-8 text-stone-300" />
+                </div>
+              </div>
+            )}
+            <h2 className={`text-2xl font-black mb-1 ${
+              endGameInfo?.tone === "win" ? "text-amber-300" :
+              endGameInfo?.tone === "loss" ? "text-rose-400" : "text-stone-200"
+            }`}>{endGameInfo?.title}</h2>
+            <p className="text-sm text-stone-400">{endGameInfo?.detail}</p>
           </div>
-          <DialogFooter>
-            <Button onClick={handleLeaveAfterGame} className="bg-amber-500 text-stone-950 hover:bg-amber-400">
-              Back to Lobby
-            </Button>
-          </DialogFooter>
+
+          {/* Stats row */}
+          <div className="px-6 pb-2">
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="rounded-lg bg-stone-800/60 p-2.5 text-center">
+                <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Moves</div>
+                <div className="text-lg font-bold text-stone-200">{Math.ceil(activeGame.moves.length / 2)}</div>
+              </div>
+              <div className="rounded-lg bg-stone-800/60 p-2.5 text-center">
+                <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Result</div>
+                <div className={`text-lg font-bold ${
+                  endGameInfo?.tone === "win" ? "text-emerald-400" :
+                  endGameInfo?.tone === "loss" ? "text-rose-400" : "text-stone-300"
+                }`}>
+                  {endGameInfo?.tone === "win" ? "+1" : endGameInfo?.tone === "loss" ? "-1" : "½"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-stone-800/60 p-2.5 text-center">
+                <div className="text-xs text-stone-500 uppercase tracking-wider mb-1">Type</div>
+                <div className="text-xs font-bold text-stone-300 leading-tight mt-0.5 capitalize">{activeGame.status}</div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pb-6">
+              <Button
+                variant="outline"
+                onClick={handleLeaveAfterGame}
+                className="flex-1 border-stone-700 bg-stone-800 text-stone-200 hover:bg-stone-700"
+              >
+                <ArrowLeft className="size-4 mr-1.5" />
+                Lobby
+              </Button>
+              <Button
+                onClick={handleLeaveAfterGame}
+                className="flex-1 bg-amber-500 text-stone-950 hover:bg-amber-400 font-semibold"
+              >
+                <RotateCcw className="size-4 mr-1.5" />
+                New Game
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
@@ -1066,41 +1170,51 @@ function LostBox({
   title,
   subtitle,
   types,
+  materialScore,
   ownerColor,
   isDark,
 }: {
   title: string;
   subtitle: string;
   types: string[];
+  materialScore: number; // positive = up, negative = down, 0 = even
   ownerColor: PieceColor;
   isDark: boolean;
 }) {
   const cardBg = isDark ? "border-stone-800 bg-stone-900/40" : "border-stone-300 bg-white";
-  const titleColor = isDark ? "text-stone-300" : "text-stone-800";
-  const subColor = isDark ? "text-stone-500" : "text-stone-500";
-  // Sort by piece value ascending so the heaviest losses show last (right side).
+  const titleColor = isDark ? "text-stone-400" : "text-stone-600";
+  // Sort by piece value so pawns come first, queen last
   const order: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
   const sorted = [...types].sort((a, b) => (order[a] ?? 0) - (order[b] ?? 0));
+
+  const materialCls = materialScore > 0
+    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+    : materialScore < 0
+    ? "bg-rose-500/10 text-rose-400 border border-rose-500/25"
+    : "bg-stone-700/30 text-stone-500 border border-stone-700/40";
+
   return (
     <div className={`rounded-xl border p-3 ${cardBg}`}>
       <div className="flex items-center justify-between mb-2">
         <span className={`text-[10px] uppercase tracking-wider font-bold ${titleColor}`}>{title}</span>
-        <span className={`text-[10px] ${subColor}`}>{subtitle}</span>
+        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${materialCls}`}>
+          {materialScore > 0 ? `+${materialScore}` : materialScore < 0 ? `${materialScore}` : "Even"}
+        </span>
       </div>
       <div className="flex items-center gap-0.5 min-h-[28px] flex-wrap">
         {sorted.length === 0 ? (
-          <span className={`text-[11px] italic ${subColor}`}>No pieces lost yet.</span>
+          <span className={`text-[11px] italic ${isDark ? "text-stone-600" : "text-stone-400"}`}>—</span>
         ) : (
           sorted.map((t, i) => (
             <span
               key={i}
-              className={`text-xl leading-none ${
+              title={({ p: "Pawn", n: "Knight", b: "Bishop", r: "Rook", q: "Queen", k: "King" }[t] ?? "")}
+              className={`text-[22px] leading-none captured-piece cursor-default ${
                 ownerColor === "white"
-                  ? // The white player's lost pieces are white glyphs → on dark bg
-                    isDark ? "text-stone-100" : "text-stone-800"
-                  : // The black player's lost pieces are black glyphs → invert if needed
-                    isDark ? "text-stone-900 invert" : "text-stone-900"
+                  ? isDark ? "text-stone-100" : "text-stone-800"
+                  : isDark ? "text-stone-900 drop-shadow-[0_0_1px_rgba(255,255,255,0.6)]" : "text-stone-900"
               }`}
+              style={{ filter: ownerColor === "black" && isDark ? "drop-shadow(0 0 2px rgba(255,255,255,0.5))" : undefined }}
             >
               {PIECE_GLYPHS[t] ?? ""}
             </span>
@@ -1129,42 +1243,72 @@ function ClockRow({
   isDark: boolean;
 }) {
   const lowTime = ms <= 30_000; // under 30s — render in rose
+  const criticalTime = ms <= 10_000; // under 10s — extra urgent
+  const pct = Math.max(0, Math.min(100, (ms / INITIAL_TIME_MS) * 100));
+
   const rowBg = isTurn
-    ? "bg-amber-500/10 border-amber-500/40"
+    ? lowTime
+      ? "bg-rose-500/10 border-rose-500/40"
+      : "bg-emerald-500/8 border-emerald-500/30"
     : isDark
       ? "bg-stone-950/60 border-stone-800"
       : "bg-stone-50 border-stone-300";
-  const timeColor = lowTime
+
+  const timeColor = criticalTime
+    ? "text-rose-400 clock-low"
+    : lowTime
     ? "text-rose-400"
     : isTurn
-      ? "text-amber-300"
+      ? "text-emerald-300"
       : isDark
         ? "text-stone-300"
-        : "text-stone-800";
+        : "text-stone-700";
+
+  const barColor = criticalTime
+    ? "bg-rose-500"
+    : lowTime
+    ? "bg-orange-500"
+    : isTurn
+    ? "bg-emerald-500"
+    : "bg-stone-600";
+
   const nameColor = isDark ? "text-stone-200" : "text-stone-800";
   const mutedColor = isDark ? "text-stone-500" : "text-stone-500";
+
   return (
-    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${rowBg}`}>
-      <span
-        className={`size-3 rounded-full border ${
-          color === "white"
-            ? "bg-stone-100 border-stone-300"
-            : "bg-stone-950 border-stone-700"
-        }`}
-      />
-      <div className="flex-1 min-w-0">
-        <div className={`text-sm font-semibold truncate ${nameColor}`}>
-          {name}
-          {isMe && (
-            <span className={`ml-1.5 text-[9px] uppercase tracking-wider ${mutedColor}`}>(you)</span>
-          )}
-        </div>
-        <div className={`text-[10px] uppercase tracking-wider ${mutedColor}`}>
-          {color === "white" ? "White" : "Black"}
-        </div>
+    <div className={`rounded-lg border overflow-hidden transition-all duration-300 ${rowBg}`}>
+      {/* Time progress bar at top */}
+      <div className={`h-0.5 ${isDark ? "bg-stone-800" : "bg-stone-200"}`}>
+        <div
+          className={`h-full transition-all duration-1000 ease-linear ${barColor}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      <div className={`font-mono text-lg tabular-nums ${timeColor} ${lowTime && isTurn ? "animate-pulse" : ""}`}>
-        {fmtTime(ms)}
+      <div className="flex items-center gap-3 px-3 py-2">
+        <span
+          className={`size-3.5 rounded-full border-2 flex-shrink-0 shadow-sm ${
+            color === "white"
+              ? "bg-stone-100 border-stone-300 shadow-stone-200/50"
+              : "bg-stone-950 border-stone-600 shadow-stone-900/50"
+          }`}
+        />
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-semibold truncate flex items-center gap-1.5 ${nameColor}`}>
+            {name}
+            {isMe && (
+              <span className={`text-[9px] uppercase tracking-wider px-1 py-0.5 rounded bg-amber-500/15 text-amber-400 font-bold`}>you</span>
+            )}
+          </div>
+          <div className={`text-[10px] uppercase tracking-wider flex items-center gap-1 ${mutedColor}`}>
+            {color === "white" ? "♔ White" : "♚ Black"}
+            {isTurn && (
+              <span className="text-emerald-400 font-bold ml-1">● THINKING</span>
+            )}
+          </div>
+        </div>
+        <div className={`font-mono text-xl tabular-nums font-bold tracking-tight ${timeColor}`}>
+          {fmtTime(ms)}
+        </div>
       </div>
     </div>
   );
@@ -1188,10 +1332,13 @@ function MoveList({
   const moves = game.moves;
   if (moves.length === 0) {
     return (
-      <div className="p-6 text-center text-xs text-stone-500">
-        <p className={`font-bold mb-1 ${isDark ? "text-stone-400" : "text-stone-600"}`}>No moves registered yet</p>
-        <p className="text-[10px] text-stone-600">
-          {game.turn === "white" ? "White" : "Black"} to start the match.
+      <div className="p-6 text-center">
+        <div className="size-10 rounded-full bg-stone-800/60 flex items-center justify-center mx-auto mb-3">
+          <span className="text-2xl">♟</span>
+        </div>
+        <p className={`text-xs font-semibold mb-1 ${isDark ? "text-stone-400" : "text-stone-600"}`}>No moves yet</p>
+        <p className={`text-[10px] ${isDark ? "text-stone-600" : "text-stone-400"}`}>
+          {game.turn === "white" ? "White" : "Black"} to move first.
         </p>
       </div>
     );
@@ -1223,25 +1370,35 @@ function MoveList({
           </tr>
         </thead>
         <tbody className={`divide-y ${divider} text-xs font-medium ${rowText}`}>
-          {rows.map((r) => (
-            <tr key={r.num} className={`${rowHover} transition-colors`}>
-              <td className={`py-2 px-3 font-bold text-center ${numText}`}>{r.num}</td>
-              <td className={`py-2 px-3 font-semibold ${moveText}`}>
-                {r.white?.san ?? ""}
-                {r.white && r.white.by === myUid && (
-                  <span className="ml-1 text-[9px] text-amber-400/70">(you)</span>
-                )}
-              </td>
-              <td className={`py-2 px-3 font-semibold ${moveText}`}>
-                {r.black?.san ?? (
-                  <span className="text-[10px] italic text-stone-600 font-normal">thinking…</span>
-                )}
-                {r.black && r.black.by === myUid && (
-                  <span className="ml-1 text-[9px] text-amber-400/70">(you)</span>
-                )}
-              </td>
-            </tr>
-          ))}
+          {rows.map((r, rowIdx) => {
+            const isLastRow = rowIdx === rows.length - 1;
+            return (
+              <tr
+                key={r.num}
+                className={`${rowHover} transition-colors ${isLastRow ? "move-current" : ""}`}
+              >
+                <td className={`py-2 px-3 font-bold text-center tabular-nums ${numText}`}>{r.num}.</td>
+                <td className={`py-2 px-3 font-mono font-semibold ${moveText}`}>
+                  {r.white?.san ?? "—"}
+                  {r.white && r.white.by === myUid && (
+                    <span className="ml-1 text-[8px] font-sans uppercase tracking-wider text-amber-400/60">you</span>
+                  )}
+                </td>
+                <td className={`py-2 px-3 font-mono font-semibold ${moveText}`}>
+                  {r.black ? (
+                    <>
+                      {r.black.san}
+                      {r.black.by === myUid && (
+                        <span className="ml-1 text-[8px] font-sans uppercase tracking-wider text-amber-400/60">you</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[10px] italic font-sans text-stone-600">…</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <AnimatePresence>
