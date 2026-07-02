@@ -22,9 +22,20 @@ export const metadata: Metadata = {
   keywords: ["chess", "chess game", "AI chess", "play chess online", "react-chessboard", "chess.js"],
   authors: [{ name: "Grandmaster's Arena" }],
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: ["/icon.svg", "/favicon.ico"],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    other: [
+      { rel: "mask-icon", url: "/icon.svg", color: "#f5c451" },
+    ],
   },
   manifest: "/manifest.json",
   appleWebApp: {
